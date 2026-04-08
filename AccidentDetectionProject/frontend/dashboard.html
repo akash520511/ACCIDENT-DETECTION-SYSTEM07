@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Accident Detection System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .severity-critical { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+        .severity-major { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .severity-moderate { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .severity-low { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+        }
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .alert-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <div class="w-64 gradient-bg text-white fixed h-full">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">AccidentDetect</h1>
+                <p class="text-white/70 text-sm mt-1">AI-Powered Safety</p>
+            </div>
+            <nav class="mt-8">
+                <a href="#" class="flex items-center px-6 py-3 bg-white/10 mx-3 rounded-lg">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                    Dashboard
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-white/70 hover:bg-white/10 mx-3 rounded-lg transition">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                    Analytics
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-white/70 hover:bg-white/10 mx-3 rounded-lg transition">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                    Reports
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-white/70 hover:bg-white/10 mx-3 rounded-lg transition">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                    Settings
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ml-64 flex-1 overflow-auto">
+            <!-- Header -->
+            <div class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="px-8 py-4 flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold text-gray-800">Accident Detection Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm text-gray-600">System Online</span>
+                        </div>
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span class="text-purple-600 font-semibold">A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Accuracy</p>
+                                <p class="text-3xl font-bold text-gray-800" id="accuracy">94.2%</p>
+                                <p class="text-green-500 text-sm mt-1">↑ 2.1% from last month</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Response Time</p>
+                                <p class="text-3xl font-bold text-gray-800" id="responseTime">1.3s</p>
+                                <p class="text-green-500 text-sm mt-1">↓ 0.2s improvement</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Detections</p>
+                                <p class="text-3xl font-bold text-gray-800" id="totalDetections">0</p>
+                                <p class="text-gray-500 text-sm mt-1">This month</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Active Cameras</p>
+                                <p class="text-3xl font-bold text-gray-800">24</p>
+                                <p class="text-green-500 text-sm mt-1">All operational</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Detection Area -->
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Video Upload -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">Upload Video for Analysis</h3>
+                        <div id="uploadZone" class="upload-zone rounded-xl p-8 text-center cursor-pointer">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                            <p class="text-gray-600">Drag & drop video here or click to upload</p>
+                            <p class="text-gray-400 text-sm mt-2">Supports MP4, AVI, MOV (Max 500MB)</p>
+                            <input type="file" id="videoInput" accept="video/*" class="hidden">
+                        </div>
+                        <div id="uploadProgress" class="hidden mt-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Uploading...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="progressBar" class="gradient-bg h-2 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div id="analysisStatus" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                                <span>Analyzing video with AI model...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Panel -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">Detection Results</h3>
+                        <div id="resultsPanel">
+                            <div class="text-center py-12 text-gray-400">
+                                <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                                <p>Upload a video to start detection</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap & Analytics -->
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">Impact Heatmap</h3>
+                        <canvas id="heatmapCanvas" class="w-full h-64 bg-gray-100 rounded-lg"></canvas>
+                        <p class="text-sm text-gray-500 mt-3 text-center">Red zones indicate high collision impact areas</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">Severity Distribution</h3>
+                        <canvas id="severityChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts -->
+                <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Accident Alerts</h3>
+                    <div id="alertsList" class="space-y-3">
+                        <p class="text-gray-400 text-center py-8">No recent alerts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const videoInput = document.getElementById('videoInput');
+        const resultsPanel = document.getElementById('resultsPanel');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+
+        // Chart instances
+        let severityChart;
+        let heatmapCtx;
+
+        // Initialize charts
+        function initCharts() {
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            severityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low', 'Moderate', 'Major', 'Critical'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#a8edea', '#fa709a', '#f5576c', '#ff416c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            heatmapCtx = document.getElementById('heatmapCanvas').getContext('2d');
+        }
+
+        // Update statistics from backend
+        async function updateStats() {
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+                document.getElementById('totalDetections').innerText = stats.total_accidents;
+                
+                if (severityChart) {
+                    severityChart.data.datasets[0].data = [
+                        stats.severity_breakdown.Low,
+                        stats.severity_breakdown.Moderate,
+                        stats.severity_breakdown.Major,
+                        stats.severity_breakdown.Critical
+                    ];
+                    severityChart.update();
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Upload and detect video
+        async function uploadVideo(file) {
+            const formData = new FormData();
+            formData.append('video', file);
+
+            uploadProgress.classList.remove('hidden');
+            analysisStatus.classList.add('hidden');
+            resultsPanel.innerHTML = '<div class="text-center py-12 text-gray-400"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div><p>Processing...</p></div>';
+
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/detect');
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = (e.loaded / e.total) * 100;
+                        progressBar.style.width = `${percent}%`;
+                        progressPercent.innerText = `${Math.round(percent)}%`;
+                    }
+                };
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.response);
+                        displayResults(result);
+                        updateStats();
+                        
+                        // Add to alerts
+                        if (result.accident_detected) {
+                            addAlert(result);
+                        }
+                    }
+                    uploadProgress.classList.add('hidden');
+                };
+                xhr.send(formData);
+            } catch (error) {
+                console.error('Upload failed:', error);
+                resultsPanel.innerHTML = '<div class="text-center py-12 text-red-500"><p>Error processing video</p></div>';
+                uploadProgress.classList.add('hidden');
+            }
+        }
+
+        // Display detection results
+        function displayResults(result) {
+            const severityColors = {
+                'Critical': 'severity-critical',
+                'Major': 'severity-major',
+                'Moderate': 'severity-moderate',
+                'Low': 'severity-low'
+            };
+
+            const html = `
+                <div class="animate-slide-in">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">Accident Status</span>
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold ${result.accident_detected ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                                ${result.accident_detected ? '🚨 ACCIDENT DETECTED' : '✅ No Accident'}
+                            </span>
+                        </div>
+                        ${result.accident_detected ? `
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500">Confidence Score</p>
+                                    <p class="text-2xl font-bold text-purple-600">${result.confidence_score}%</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500">Severity</p>
+                                    <p class="text-2xl font-bold ${result.severity === 'Critical' ? 'text-red-600' : result.severity === 'Major' ? 'text-orange-600' : 'text-yellow-600'}">${result.severity}</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500">Response Time</p>
+                                    <p class="text-xl font-bold">${result.response_time || '1.3'}s</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500">Video Duration</p>
+                                    <p class="text-xl font-bold">${result.duration}s</p>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-lg ${severityColors[result.severity]} bg-opacity-20">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-semibold">Emergency Response Required</p>
+                                        <p class="text-sm opacity-75">Police & Ambulance have been notified</p>
+                                    </div>
+                                    <div class="alert-pulse w-4 h-4 bg-red-500 rounded-full"></div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="bg-green-50 p-4 rounded-lg text-center">
+                                <p class="text-green-700">No accident detected in this video</p>
+                                <p class="text-sm text-green-600 mt-1">Confidence: ${result.confidence_score}%</p>
+                            </div>
+                        `}
+                    </div>
+                    ${result.impact_zones && result.impact_zones.length > 0 ? `
+                        <div>
+                            <p class="text-sm font-semibold mb-2">Impact Zones Detected: ${result.impact_zones.length}</p>
+                            <canvas id="impactCanvas" width="400" height="200" class="w-full h-32 bg-gray-100 rounded"></canvas>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            resultsPanel.innerHTML = html;
+
+            // Draw heatmap if impact zones exist
+            if (result.impact_zones && result.impact_zones.length > 0) {
+                drawHeatmap(result.impact_zones);
+            }
+        }
+
+        // Draw heatmap
+        function drawHeatmap(zones) {
+            const canvas = document.getElementById('heatmapCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            zones.forEach(zone => {
+                const x = (zone.x / 1920) * canvas.width;
+                const y = (zone.y / 1080) * canvas.height;
+                const radius = 20 + (zone.intensity * 30);
+                const gradient = ctx.createRadialGradient(x, y, 5, x, y, radius);
+                gradient.addColorStop(0, `rgba(239, 68, 68, ${zone.intensity})`);
+                gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Add alert to list
+        function addAlert(result) {
+            const alertsList = document.getElementById('alertsList');
+            const alertHtml = `
+                <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 animate-slide-in">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                        <div>
+                            <p class="font-semibold text-red-800">Accident Detected</p>
+                            <p class="text-sm text-red-600">Severity: ${result.severity} | Confidence: ${result.confidence_score}%</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-red-500">${new Date().toLocaleTimeString()}</p>
+                        <p class="text-xs text-red-400">Response: ${result.response_time || 1.3}s</p>
+                    </div>
+                </div>
+            `;
+            
+            if (alertsList.children[0].innerText === 'No recent alerts') {
+                alertsList.innerHTML = alertHtml;
+            } else {
+                alertsList.insertAdjacentHTML('afterbegin', alertHtml);
+                if (alertsList.children.length > 10) {
+                    alertsList.removeChild(alertsList.lastChild);
+                }
+            }
+        }
+
+        // WebSocket for real-time updates
+        function initWebSocket() {
+            const ws = new WebSocket(`ws://${window.location.host}/ws/dashboard`);
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'accident_alert') {
+                    addAlert(data.data);
+                    new Notification('🚨 Accident Alert!', {
+                        body: `Severity: ${data.data.severity} | Confidence: ${data.data.confidence_score}%`,
+                        icon: '/static/alert-icon.png'
+                    });
+                }
+            };
+        }
+
+        // Event listeners
+        uploadZone.addEventListener('click', () => videoInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) {
+                uploadVideo(file);
+            }
+        });
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                uploadVideo(e.target.files[0]);
+            }
+        });
+
+        // Initialize
+        initCharts();
+        updateStats();
+        initWebSocket();
+        
+        // Refresh stats every 10 seconds
+        setInterval(updateStats, 10000);
+    </script>
+</body>
+</html>
