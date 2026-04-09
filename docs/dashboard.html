@@ -473,6 +473,309 @@
         
         // Refresh stats every 10 seconds
         setInterval(updateStats, 10000);
+        
+    class WebSocketClient {
+        constructor() {
+            this.ws = null;
+            this.reconnectAttempts = 0;
+            this.maxReconnectAttempts = 5;
+            this.reconnectDelay = 3000;
+            this.isConnecting = false;
+        }
+        
+        connect() {
+            if (this.isConnecting) return;
+            this.isConnecting = true;
+            
+            // Determine WebSocket URL
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const host = window.location.hostname;
+            const port = window.location.port;
+            let wsUrl = `${protocol}${host}:${port}/ws/dashboard`;
+            
+            // If on GitHub Pages, connect to Render backend
+            if (host.includes('github.io')) {
+                wsUrl = `wss://accident-detection-system.onrender.com/ws/dashboard`;
+            }
+            
+            console.log('🔌 Connecting to WebSocket:', wsUrl);
+            
+            try {
+                this.ws = new WebSocket(wsUrl);
+                this.setupEventHandlers();
+            } catch (error) {
+                console.error('WebSocket connection error:', error);
+                this.isConnecting = false;
+                this.scheduleReconnect();
+            }
+        }
+        
+        setupEventHandlers() {
+            this.ws.onopen = () => {
+                console.log('✅ WebSocket connected');
+                this.isConnecting = false;
+                this.reconnectAttempts = 0;
+                this.updateConnectionStatus(true);
+                
+                // Send initial messages
+                this.ws.send(JSON.stringify({ type: 'get_status' }));
+                this.ws.send(JSON.stringify({ type: 'ping' }));
+            };
+            
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                } catch (error) {
+                    console.error('Failed to parse message:', error);
+                }
+            };
+            
+            this.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                this.updateConnectionStatus(false);
+            };
+            
+            this.ws.onclose = (event) => {
+                console.log(`WebSocket closed: ${event.code} - ${event.reason}`);
+                this.isConnecting = false;
+                this.updateConnectionStatus(false);
+                this.scheduleReconnect();
+            };
+        }
+        
+        handleMessage(data) {
+            console.log('📨 Received:', data.type);
+            
+            switch(data.type) {
+                case 'accident_alert':
+                    this.showAccidentAlert(data.data);
+                    break;
+                case 'metrics_update':
+                    this.updateMetrics(data.data);
+                    break;
+                case 'heatmap_update':
+                    this.updateHeatmap(data.data);
+                    break;
+                case 'notification':
+                    this.showNotification(data.title, data.message, data.severity);
+                    break;
+                case 'heartbeat':
+                    // Respond to heartbeat
+                    this.ws.send(JSON.stringify({ type: 'pong' }));
+                    break;
+                case 'connection_established':
+                    console.log('Connected with ID:', data.client_id);
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+        
+        showAccidentAlert(alertData) {
+            console.log('🚨 ACCIDENT ALERT:', alertData);
+            
+            // Update UI
+            const alertDiv = document.getElementById('accidentAlert');
+            if (alertDiv) {
+                alertDiv.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-800">
+                                    <strong>Accident Detected!</strong> 
+                                    Severity: ${alertData.severity} | 
+                                    Confidence: ${alertData.confidence_score}%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show browser notification
+            if (Notification.permission === 'granted') {
+                new Notification('🚨 Accident Alert!', {
+                    body: `Severity: ${alertData.severity} | Confidence: ${alertData.confidence_score}%`,
+                    icon: '/static/alert-icon.png',
+                    tag: 'accident-alert'
+                });
+            }
+            
+            // Add to alerts list
+            this.addToAlertsList(alertData);
+        }
+        
+        updateMetrics(metrics) {
+            // Update dashboard metrics
+            const metricsMap = {
+                'accuracy': metrics.accuracy,
+                'precision': metrics.precision,
+                'recall': metrics.recall,
+                'f1_score': metrics.f1_score,
+                'response_time': metrics.response_time_avg,
+                'total_detections': metrics.total_detections,
+                'active_connections': metrics.active_connections
+            };
+            
+            for (const [id, value] of Object.entries(metricsMap)) {
+                const element = document.getElementById(`metric-${id}`);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+        }
+        
+        updateHeatmap(heatmapData) {
+            // Update heatmap visualization
+            const canvas = document.getElementById('heatmapCanvas');
+            if (canvas && heatmapData.zones) {
+                this.drawHeatmap(canvas, heatmapData.zones);
+            }
+        }
+        
+        drawHeatmap(canvas, zones) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            zones.forEach(zone => {
+                const x = (zone.x / 1920) * canvas.width;
+                const y = (zone.y / 1080) * canvas.height;
+                const radius = 20 + (zone.intensity * 40);
+                const intensity = zone.intensity;
+                
+                const gradient = ctx.createRadialGradient(x, y, 5, x, y, radius);
+                
+                if (intensity > 0.7) {
+                    gradient.addColorStop(0, `rgba(255, 0, 0, ${intensity})`);
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                } else if (intensity > 0.4) {
+                    gradient.addColorStop(0, `rgba(255, 165, 0, ${intensity})`);
+                    gradient.addColorStop(1, 'rgba(255, 165, 0, 0)');
+                } else {
+                    gradient.addColorStop(0, `rgba(255, 255, 0, ${intensity})`);
+                    gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        showNotification(title, message, severity) {
+            const colors = {
+                success: 'green',
+                error: 'red',
+                warning: 'yellow',
+                info: 'blue'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 bg-${colors[severity] || 'blue'}-500 text-white p-4 rounded-lg shadow-lg z-50 animate-slide-in`;
+            toast.innerHTML = `
+                <strong>${title}</strong><br>
+                <small>${message}</small>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+        
+        addToAlertsList(alert) {
+            const alertsList = document.getElementById('alertsList');
+            if (!alertsList) return;
+            
+            const alertItem = document.createElement('div');
+            alertItem.className = 'flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200 mb-2 animate-slide-in';
+            alertItem.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <div>
+                        <p class="font-semibold text-red-800">Accident Detected</p>
+                        <p class="text-xs text-red-600">Severity: ${alert.severity} | Confidence: ${alert.confidence_score}%</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-red-500">${new Date().toLocaleTimeString()}</p>
+                </div>
+            `;
+            
+            alertsList.insertBefore(alertItem, alertsList.firstChild);
+            
+            // Keep only last 10 alerts
+            while (alertsList.children.length > 10) {
+                alertsList.removeChild(alertsList.lastChild);
+            }
+        }
+        
+        updateConnectionStatus(isConnected) {
+            const statusDot = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionStatusText');
+            
+            if (statusDot) {
+                statusDot.className = `w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`;
+            }
+            if (statusText) {
+                statusText.textContent = isConnected ? 'Connected' : 'Disconnected';
+            }
+        }
+        
+        scheduleReconnect() {
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.reconnectAttempts++;
+                console.log(`Reconnecting in ${this.reconnectDelay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                setTimeout(() => this.connect(), this.reconnectDelay);
+            } else {
+                console.error('Max reconnection attempts reached');
+                this.updateConnectionStatus(false);
+            }
+        }
+        
+        send(message) {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify(message));
+            }
+        }
+        
+        disconnect() {
+            if (this.ws) {
+                this.ws.close();
+                this.ws = null;
+            }
+        }
+    }
+    
+    // Initialize WebSocket when page loads
+    let wsClient;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        wsClient = new WebSocketClient();
+        wsClient.connect();
+        
+        // Request notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    });
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (wsClient) {
+            wsClient.disconnect();
+        }
+    });
+
     </script>
 </body>
 </html>
