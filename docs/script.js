@@ -1,7 +1,10 @@
 
+// ========================================
+// Configuration & State
+// ========================================
 const CONFIG = {
-    API_BASE: 'http://localhost:8000',
-    FRAME_INTERVAL: 500, // ms between frame captures
+    API_BASE: 'https://accident-detection-system07-3.onrender.com', 
+    FRAME_INTERVAL: 500, 
     ALERT_SOUND_ENABLED: true
 };
 
