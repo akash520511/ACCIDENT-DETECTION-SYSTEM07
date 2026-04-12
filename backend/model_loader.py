@@ -1,8 +1,10 @@
 import os
-import joblib  # Changed from pickle to joblib
-import numpy as np
 import cv2
+import numpy as np
 from typing import Tuple, Dict, Any
+
+# Import torch to load the model correctly
+import torch
 
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
@@ -12,58 +14,91 @@ MODEL_PATH = os.path.join(
 _model = None
 
 def load_model():
-    """Load the trained model from disk using joblib"""
+    """Load the trained model from disk using PyTorch"""
     global _model
     
     if _model is not None:
         return _model
     
     try:
-        # Use joblib instead of pickle for scikit-learn models
-        _model = joblib.load(MODEL_PATH)
-        print(f"Model loaded successfully from {MODEL_PATH}")
+        # Check if file exists
+        if not os.path.exists(MODEL_PATH):
+            print(f"Model file not found at {MODEL_PATH}")
+            return None
+
+        print(f"Loading model from {MODEL_PATH} using PyTorch...")
+        
+        # Use torch.load for PyTorch/Ultralytics models (.pkl or .pt)
+        # map_location='cpu' ensures it runs on Render (which often has no GPU)
+        _model = torch.load(MODEL_PATH, map_location='cpu')
+        
+        print("Model loaded successfully.")
         return _model
-    except FileNotFoundError:
-        print(f"Model file not found at {MODEL_PATH}")
-        return None
+        
     except Exception as e:
         print(f"Error loading model: {str(e)}")
         return None
 
-def preprocess_image(image: np.ndarray, target_size: Tuple[int, int] = (224, 224)) -> np.ndarray:
-    """Preprocess image for model prediction"""
-    if len(image.shape) == 3 and image.shape[2] == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    image = cv2.resize(image, target_size)
-    image = image.astype(np.float32) / 255.0
-    image = image.flatten().reshape(1, -1)
-    return image
+def preprocess_image(image: np.ndarray, target_size: Tuple[int, int] = (640, 640)) -> np.ndarray:
+    """Preprocess image for YOLO prediction"""
+    # YOLO expects RGB, OpenCV reads BGR
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Resize to standard YOLO input size
+    image_resized = cv2.resize(image_rgb, target_size)
+    return image_resized
 
 def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
     """Run prediction on a single frame"""
     try:
-        processed = preprocess_image(image)
-        
-        if hasattr(model, 'predict_proba'):
-            probabilities = model.predict_proba(processed)[0]
-            confidence = max(probabilities)
-            prediction = model.predict(processed)[0]
+        # 1. Check if it's an Ultralytics YOLO model
+        if hasattr(model, 'predict'):
+            # Run YOLO inference
+            results = model.predict(source=image, verbose=False, conf=0.25)
+            
+            accident_detected = False
+            max_confidence = 0.0
+            
+            if results and len(results) > 0:
+                result = results[0]
+                
+                if result.boxes is not None and len(result.boxes) > 0:
+                    for box in result.boxes:
+                        conf = float(box.conf[0])
+                        cls_id = int(box.cls[0])
+                        
+                        # Check class name (assuming 'accident' or class 0)
+                        # You may need to verify what your model actually detects
+                        class_name = model.names.get(cls_id, "").lower()
+                        
+                        # Assuming class 0 or 'accident' is the target
+                        if "accident" in class_name or cls_id == 0:
+                            accident_detected = True
+                            if conf > max_confidence:
+                                max_confidence = conf
+            
+            if accident_detected:
+                return {
+                    "result": "Accident",
+                    "confidence": max_confidence * 100,
+                    "raw_prediction": "Accident"
+                }
+            else:
+                return {
+                    "result": "No Accident",
+                    "confidence": 0.0,
+                    "raw_prediction": "Clear"
+                }
+
+        # 2. Fallback for generic PyTorch models (if not YOLO)
         else:
-            prediction = model.predict(processed)[0]
-            confidence = 0.85
-        
-        if isinstance(prediction, (int, np.integer)):
-            result = "Accident" if prediction == 1 else "No Accident"
-        else:
-            result = "Accident" if str(prediction).lower() in ['accident', '1', 'yes', 'true'] else "No Accident"
-        
-        return {
-            "result": result,
-            "confidence": float(confidence) * 100,
-            "raw_prediction": int(prediction) if isinstance(prediction, (int, np.integer)) else str(prediction)
-        }
-        
+            # This part depends on your specific model architecture if it's NOT YOLO
+            # For now, returning a placeholder logic
+            return {
+                "result": "No Accident", 
+                "confidence": 0.0,
+                "raw_prediction": "Unknown Model Type"
+            }
+            
     except Exception as e:
         print(f"Prediction error: {str(e)}")
         return {"result": "Error", "confidence": 0.0, "error": str(e)}
