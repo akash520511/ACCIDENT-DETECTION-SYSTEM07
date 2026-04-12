@@ -1,33 +1,28 @@
 import os
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-from datetime import datetime, timedelta
 import asyncio
-from loguru import logger
-import json
-import base64
-import uuid
-import shutil
-from pathlib import Path
-from accident_model import AccidentDetector
-from database import DatabaseManager
-import redis
-import httpx
+import time
+from datetime import datetime
+from typing import Optional
+from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+
+# Import custom modules
+from model_loader import load_model, predict_single_frame, get_model
+import database
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Intelligent Multi-Feature Accident Detection System",
-    description="AI-powered real-time accident detection with severity analysis and emergency response",
-    version="2.0.0"
+    title="Intelligent Accident Detection System",
+    description="AI-powered accident detection with real-time analysis",
+    version="1.0.0"
 )
 
-# CORS middleware
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,339 +31,310 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize components
-detector = AccidentDetector()
-db_manager = DatabaseManager()
+# Create directories for saved frames
+SAVED_FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "saved_frames")
+os.makedirs(SAVED_FRAMES_DIR, exist_ok=True)
 
-# Redis connection (with fallback)
-try:
-    redis_client = redis.Redis(
-        host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", 6379)),
-        decode_responses=True,
-        socket_connect_timeout=5
-    )
-    redis_client.ping()
-    logger.info("Redis connected successfully")
-except:
-    logger.warning("Redis connection failed, using fallback")
-    redis_client = None
+# Mount static files
+app.mount("/saved_frames", StaticFiles(directory=SAVED_FRAMES_DIR), name="saved_frames")
 
-# Create upload directory
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Global variables
+model = None
+detection_active = False
 
-# Twilio configuration (optional)
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-EMERGENCY_PHONE_NUMBER = os.getenv("EMERGENCY_PHONE_NUMBER")
+@app.on_event("startup")
+async def startup_event():
+    """Initialize model and database on startup"""
+    global model
+    print("Starting up Accident Detection System...")
+    model = load_model()
+    database.init_database()
+    print("System ready!")
 
-# Models
-class AccidentReport(BaseModel):
-    timestamp: datetime
-    severity: str
-    confidence: float
-    impact_zone: Dict
-    vehicle_count: int
-    location: str
-    video_url: Optional[str] = None
+# ==================== HEALTH CHECK ====================
 
-class DetectionResponse(BaseModel):
-    accident_detected: bool
-    severity: str
-    confidence_score: float
-    impact_heatmap: List[List[float]]
-    response_time: float
-    timestamp: datetime
-    vehicle_count: int
-    motion_score: float
+@app.get("/")
+async def root():
+    """Health check endpoint"""
+    return {
+        "status": "online",
+        "service": "Accident Detection System",
+        "version": "1.0.0",
+        "model_loaded": model is not None
+    }
 
-class VideoAnalysisRequest(BaseModel):
-    video_base64: Optional[str] = None
-    video_url: Optional[str] = None
+@app.get("/health")
+async def health_check():
+    """Detailed health check"""
+    return {
+        "status": "healthy",
+        "model_status": "loaded" if model else "not_loaded",
+        "database": "connected",
+        "timestamp": datetime.now().isoformat()
+    }
 
-class EmergencyAlert(BaseModel):
-    alert_id: str
-    timestamp: datetime
-    severity: str
-    confidence: float
-    location: str
-    vehicle_count: int
-    status: str
+# ==================== IMAGE PREDICTION ====================
 
-# WebSocket connection manager
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.dashboard_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    async def connect_dashboard(self, websocket: WebSocket):
-        await websocket.accept()
-        self.dashboard_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-
-    def disconnect_dashboard(self, websocket: WebSocket):
-        if websocket in self.dashboard_connections:
-            self.dashboard_connections.remove(websocket)
-
-    async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except:
-                pass
-
-    async def broadcast_to_dashboard(self, message: dict):
-        for connection in self.dashboard_connections:
-            try:
-                await connection.send_json(message)
-            except:
-                pass
-
-manager = ConnectionManager()
-
-# Emergency alert function
-async def send_emergency_alert(accident_data: dict):
-    """Send SMS alert for severe accidents"""
-    if TWILIO_ACCOUNT_SID and accident_data.get('severity') in ['Major', 'Critical']:
-        try:
-            from twilio.rest import Client
-            twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-            
-            message_body = f"""
-            🚨 ACCIDENT ALERT 🚨
-            Severity: {accident_data.get('severity')}
-            Confidence: {accident_data.get('confidence_score')}%
-            Location: {accident_data.get('location', 'Unknown')}
-            Time: {accident_data.get('timestamp')}
-            Vehicles Involved: {accident_data.get('vehicle_count', 0)}
-            """
-            
-            message = twilio_client.messages.create(
-                body=message_body,
-                from_=TWILIO_PHONE_NUMBER,
-                to=EMERGENCY_PHONE_NUMBER
-            )
-            logger.info(f"Emergency alert sent: {message.sid}")
-            
-            # Store alert in database
-            db_manager.save_emergency_alert(accident_data)
-            
-        except Exception as e:
-            logger.error(f"Failed to send emergency alert: {e}")
-
-# Video processing endpoint
-@app.post("/api/detect")
-async def detect_accident(
-    file: UploadFile = File(None),
-    background_tasks: BackgroundTasks = None
-):
-    """Process video and detect accidents"""
+@app.post("/predict-image")
+async def predict_image(file: UploadFile = File(...)):
+    """Process uploaded image for accident detection"""
+    start_time = time.time()
+    
     try:
-        if not file:
-            raise HTTPException(status_code=400, detail="No file uploaded")
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
         
+        # Read image
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if image is None:
+            raise HTTPException(status_code=400, detail="Could not decode image")
+        
+        # Get prediction
+        prediction = predict_single_frame(model, image)
+        
+        # Calculate response time
+        response_time = time.time() - start_time
+        
+        # Save accident frame if detected
+        saved_path = None
+        if prediction["result"] == "Accident":
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"accident_img_{timestamp}.jpg"
+            saved_path = os.path.join(SAVED_FRAMES_DIR, filename)
+            cv2.imwrite(saved_path, image)
+        
+        # Store in database
+        database.insert_detection(
+            result=prediction["result"],
+            confidence=prediction["confidence"],
+            input_type="image",
+            file_name=file.filename,
+            severity="High" if prediction["confidence"] > 85 else "Medium" if prediction["confidence"] > 70 else "Low",
+            response_time=response_time
+        )
+        
+        return {
+            "success": True,
+            "result": prediction["result"],
+            "confidence": round(prediction["confidence"], 2),
+            "response_time": round(response_time, 3),
+            "severity": "High" if prediction["confidence"] > 85 else "Medium" if prediction["confidence"] > 70 else "Low",
+            "saved_frame": saved_path is not None,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
+# ==================== VIDEO PREDICTION ====================
+
+@app.post("/predict-video")
+async def predict_video(file: UploadFile = File(...)):
+    """Process uploaded video for accident detection frame-by-frame"""
+    start_time = time.time()
+    
+    try:
         # Validate file type
         if not file.content_type.startswith('video/'):
             raise HTTPException(status_code=400, detail="File must be a video")
         
-        # Generate unique filename
-        file_id = str(uuid.uuid4())
-        file_path = UPLOAD_DIR / f"{file_id}_{file.filename}"
+        # Save uploaded video temporarily
+        temp_video_path = os.path.join(SAVED_FRAMES_DIR, f"temp_{file.filename}")
+        contents = await file.read()
+        with open(temp_video_path, 'wb') as f:
+            f.write(contents)
         
-        # Save uploaded file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Open video
+        cap = cv2.VideoCapture(temp_video_path)
         
-        # Process video
-        result = detector.process_video(str(file_path))
+        if not cap.isOpened():
+            raise HTTPException(status_code=400, detail="Could not open video file")
         
-        # Add metadata
-        result['file_id'] = file_id
-        result['filename'] = file.filename
-        result['timestamp'] = datetime.now().isoformat()
+        # Get video properties
+        fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        frame_interval = max(1, fps // 5)  # Process ~5 frames per second
         
-        # Save to database
-        db_manager.save_detection_result(result)
+        accident_frames = []
+        accident_count = 0
+        frame_count = 0
+        confidences = []
         
-        # Send emergency alert if needed
-        if result.get('accident_detected') and result.get('severity') in ['Major', 'Critical']:
-            background_tasks.add_task(send_emergency_alert, result)
-        
-        # Broadcast to dashboard
-        await manager.broadcast_to_dashboard({
-            'type': 'new_detection',
-            'data': result
-        })
-        
-        # Clean up file
-        background_tasks.add_task(lambda: os.remove(file_path))
-        
-        return JSONResponse(content=result)
-    
-    except Exception as e:
-        logger.error(f"Error processing video: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Frame detection endpoint
-@app.post("/api/detect-frame")
-async def detect_frame(frame_data: dict):
-    """Detect accident in a single frame"""
-    try:
-        frame_base64 = frame_data.get('frame')
-        if not frame_base64:
-            raise HTTPException(status_code=400, detail="No frame data provided")
-        
-        # Decode base64 image
-        image_data = base64.b64decode(frame_base64)
-        nparr = np.frombuffer(image_data, np.uint8)
-        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        # Detect accident
-        result = detector.detect_frame(frame)
-        
-        return JSONResponse(content=result)
-    
-    except Exception as e:
-        logger.error(f"Error detecting frame: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# WebSocket endpoint for real-time video streaming
-@app.websocket("/ws/video/{client_id}")
-async def websocket_video_endpoint(websocket: WebSocket, client_id: str):
-    await manager.connect(websocket)
-    try:
         while True:
-            data = await websocket.receive_text()
-            try:
-                frame_data = json.loads(data)
-                image_data = base64.b64decode(frame_data.get('frame', ''))
-                
-                if image_data:
-                    nparr = np.frombuffer(image_data, np.uint8)
-                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                    
-                    if frame is not None:
-                        detection = detector.detect_frame(frame)
-                        await websocket.send_json(detection)
-            except json.JSONDecodeError:
-                logger.error("Invalid JSON received")
-            except Exception as e:
-                logger.error(f"Error processing frame: {e}")
-                
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        logger.info(f"Client {client_id} disconnected")
-
-# Dashboard WebSocket endpoint
-@app.websocket("/ws/dashboard")
-async def websocket_dashboard_endpoint(websocket: WebSocket):
-    await manager.connect_dashboard(websocket)
-    try:
-        while True:
-            # Send periodic updates
-            stats = db_manager.get_dashboard_stats()
-            await websocket.send_json(stats)
-            await asyncio.sleep(30)
+            ret, frame = cap.read()
+            if not ret:
+                break
             
+            # Process every Nth frame for efficiency
+            if frame_count % frame_interval == 0:
+                prediction = predict_single_frame(model, frame)
+                confidences.append(prediction["confidence"])
+                
+                if prediction["result"] == "Accident":
+                    accident_count += 1
+                    timestamp = frame_count / fps
+                    
+                    # Save accident frame
+                    accident_filename = f"accident_vid_{datetime.now().strftime('%Y%m%d_%H%M%S')}_frame_{frame_count}.jpg"
+                    accident_path = os.path.join(SAVED_FRAMES_DIR, accident_filename)
+                    cv2.imwrite(accident_path, frame)
+                    
+                    accident_frames.append({
+                        "frame_index": frame_count,
+                        "timestamp": round(timestamp, 2),
+                        "confidence": round(prediction["confidence"], 2),
+                        "saved_frame": accident_filename
+                    })
+            
+            frame_count += 1
+        
+        cap.release()
+        
+        # Clean up temp file
+        try:
+            os.remove(temp_video_path)
+        except:
+            pass
+        
+        # Calculate overall result
+        total_processed = frame_count // frame_interval
+        accident_ratio = accident_count / max(total_processed, 1)
+        avg_confidence = sum(confidences) / max(len(confidences), 1)
+        
+        overall_result = "Accident" if accident_ratio > 0.15 else "No Accident"
+        overall_confidence = max(confidences) if confidences else 0
+        
+        response_time = time.time() - start_time
+        
+        # Store in database
+        database.insert_detection(
+            result=overall_result,
+            confidence=overall_confidence,
+            input_type="video",
+            file_name=file.filename,
+            accident_frames=accident_count,
+            frame_timestamps=str([f["timestamp"] for f in accident_frames]),
+            severity="Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor",
+            response_time=response_time
+        )
+        
+        return {
+            "success": True,
+            "result": overall_result,
+            "confidence": round(overall_confidence, 2),
+            "total_frames": total_frames,
+            "frames_processed": total_processed,
+            "accident_frames_count": accident_count,
+            "accident_frames": accident_frames,
+            "average_confidence": round(avg_confidence, 2),
+            "severity": "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor" if accident_count > 0 else "None",
+            "response_time": round(response_time, 3),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Video processing error: {str(e)}")
+
+# ==================== HISTORY ENDPOINTS ====================
+
+@app.get("/history")
+async def get_history(limit: int = 50):
+    """Get detection history"""
+    try:
+        history = database.get_all_detections(limit)
+        return {
+            "success": True,
+            "count": len(history),
+            "history": history
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.get("/stats")
+async def get_stats():
+    """Get detection statistics"""
+    try:
+        stats = database.get_detection_stats()
+        return {
+            "success": True,
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.delete("/history")
+async def clear_history():
+    """Clear all detection history"""
+    try:
+        database.clear_history()
+        return {"success": True, "message": "History cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+# ==================== WEBSOCKET FOR LIVE DETECTION ====================
+
+@app.websocket("/ws/live-detection")
+async def websocket_live_detection(websocket: WebSocket):
+    """WebSocket endpoint for real-time detection"""
+    await websocket.accept()
+    global detection_active
+    detection_active = True
+    
+    try:
+        while detection_active:
+            # Receive frame data
+            data = await websocket.receive_bytes()
+            
+            # Decode image
+            nparr = np.frombuffer(data, np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if frame is not None:
+                # Get prediction
+                prediction = predict_single_frame(model, frame)
+                
+                # Send result back
+                await websocket.send_json({
+                    "result": prediction["result"],
+                    "confidence": round(prediction["confidence"], 2),
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+                # Save accident frame
+                if prediction["result"] == "Accident":
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                    filename = f"live_accident_{timestamp}.jpg"
+                    cv2.imwrite(os.path.join(SAVED_FRAMES_DIR, filename), frame)
+                    
+                    # Store in database
+                    database.insert_detection(
+                        result=prediction["result"],
+                        confidence=prediction["confidence"],
+                        input_type="live",
+                        severity="Detected"
+                    )
+                    
     except WebSocketDisconnect:
-        manager.disconnect_dashboard(websocket)
+        print("WebSocket disconnected")
+    except Exception as e:
+        print(f"WebSocket error: {str(e)}")
+    finally:
+        detection_active = False
 
-# API Endpoints
-@app.get("/api/stats")
-async def get_statistics():
-    """Get system statistics"""
-    stats = db_manager.get_dashboard_stats()
-    return JSONResponse(content=stats)
-
-@app.get("/api/history")
-async def get_history(limit: int = 100, offset: int = 0, severity: Optional[str] = None):
-    """Get accident history with pagination and filtering"""
-    history = db_manager.get_accident_history(limit, offset, severity)
-    total = db_manager.get_total_detections()
-    return JSONResponse(content={
-        "data": history,
-        "total": total,
-        "limit": limit,
-        "offset": offset
-    })
-
-@app.get("/api/performance")
-async def get_performance():
-    """Get model performance metrics"""
-    metrics = {
-        'accuracy': 94.2,
-        'precision': 94.4,
-        'recall': 94.0,
-        'f1_score': 94.2,
-        'response_time_avg': 1.3,
-        'response_time_min': 0.8,
-        'response_time_max': 2.1,
-        'total_detections': db_manager.get_total_detections(),
-        'false_alarms': db_manager.get_false_alarms(),
-        'true_positives': db_manager.get_true_positives(),
-        'false_negatives': db_manager.get_false_negatives()
-    }
-    return JSONResponse(content=metrics)
-
-@app.get("/api/accident/{accident_id}")
-async def get_accident_details(accident_id: int):
-    """Get detailed information about a specific accident"""
-    details = db_manager.get_accident_details(accident_id)
-    if not details:
-        raise HTTPException(status_code=404, detail="Accident not found")
-    return JSONResponse(content=details)
-
-@app.post("/api/alert/{alert_id}/acknowledge")
-async def acknowledge_alert(alert_id: str):
-    """Acknowledge emergency alert"""
-    success = db_manager.acknowledge_alert(alert_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    return JSONResponse(content={"status": "acknowledged", "alert_id": alert_id})
-
-@app.get("/api/export")
-async def export_data(start_date: Optional[str] = None, end_date: Optional[str] = None):
-    """Export accident data as JSON"""
-    data = db_manager.export_data(start_date, end_date)
-    return JSONResponse(content=data)
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint"""
-    return JSONResponse(content={
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "database": db_manager.check_connection(),
-        "redis": redis_client is not None
-    })
-
-# Serve static files (for frontend)
-app.mount("/static", StaticFiles(directory="frontend", html=True), name="static")
-
-@app.get("/")
-async def root():
-    """Serve the main frontend page"""
-    return FileResponse("frontend/index.html")
-
-@app.get("/dashboard")
-async def dashboard():
-    """Serve the dashboard page"""
-    return FileResponse("frontend/dashboard.html")
+# ==================== START SERVER ====================
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(
-        app, 
-        host="0.0.0.0", 
+        "app:app",
+        host="0.0.0.0",
         port=8000,
         reload=True,
         log_level="info"
