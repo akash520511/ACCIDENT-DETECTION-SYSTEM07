@@ -3,168 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intelligent Accident Detection System | VisionGuard AI</title>
-    
-    <!-- Libraries -->
+    <title>VisionGuard AI | Accident Detection System</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        :root {
-            --bg-deep: #05080f;
-            --bg-panel: rgba(15, 23, 42, 0.85);
-            --primary: #00f3ff;
-            --primary-glow: rgba(0, 243, 255, 0.4);
-            --alert: #ffb703;
-            --danger: #ff003c;
-            --success: #00ff88;
-            --text-main: #e2e8f0;
-            --text-dim: #94a3b8;
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #05080f 0%, #0a0f1f 100%);
-            color: var(--text-main);
+            background: linear-gradient(135deg, #0a0a1a 0%, #0f0f2a 100%);
+            color: #fff;
             min-height: 100vh;
-            overflow-x: hidden;
         }
-
-        /* Navigation */
+        
         nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1rem 5%;
+            background: rgba(0,0,0,0.9);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
             z-index: 100;
-            backdrop-filter: blur(12px);
-            background: rgba(5, 8, 15, 0.9);
-            border-bottom: 1px solid var(--glass-border);
         }
-
+        
         .logo {
-            font-family: 'Rajdhani', sans-serif;
             font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: bold;
+            color: #00f3ff;
         }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-dim);
-            text-decoration: none;
-            transition: color 0.3s;
-            cursor: pointer;
-        }
-
-        .nav-links a:hover { color: var(--primary); }
-
-        /* Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 80px 20px 20px;
-        }
-
-        /* Hero Section */
+        
+        .logo i { margin-right: 10px; }
+        
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: #94a3b8; text-decoration: none; cursor: pointer; }
+        .nav-links a:hover { color: #00f3ff; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 80px 20px 20px; }
+        
         .hero {
             text-align: center;
-            padding: 40px 20px;
-            margin-bottom: 40px;
-            background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), rgba(255, 0, 60, 0.02));
-            border-radius: 30px;
-            border: 1px solid var(--glass-border);
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(0,243,255,0.1), rgba(255,0,60,0.05));
+            border-radius: 20px;
+            margin-bottom: 30px;
         }
-
-        .hero h1 {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            background: linear-gradient(90deg, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p { color: var(--text-dim); }
-
-        /* Metrics Grid */
+        
+        .hero h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .hero h1 span { color: #00f3ff; }
+        .hero p { color: #94a3b8; }
+        
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-
+        
         .metric-card {
-            background: var(--bg-panel);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
             padding: 20px;
             text-align: center;
-            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .metric-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .metric-value {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .metric-label {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            margin-top: 5px;
-        }
-
-        /* Main Grid */
+        
+        .metric-value { font-size: 2rem; font-weight: bold; color: #00f3ff; }
+        .metric-label { font-size: 0.8rem; color: #94a3b8; margin-top: 5px; }
+        
         .main-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
-
-        /* Video Container */
+        
         .video-container {
             background: #000;
-            border-radius: 16px;
+            border-radius: 15px;
             overflow: hidden;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255,255,255,0.1);
             position: relative;
-            min-height: 450px;
         }
-
+        
         #videoFeed {
             width: 100%;
             height: auto;
             min-height: 450px;
-            object-fit: cover;
             background: #000;
         }
-
+        
         .video-overlay {
             position: absolute;
             bottom: 15px;
@@ -174,36 +106,32 @@
             border-radius: 8px;
             font-size: 0.8rem;
             font-family: monospace;
-            z-index: 10;
         }
-
-        /* Alert Panel */
+        
         .alert-panel {
-            background: var(--bg-panel);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
+        
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid var(--danger);
+            border-bottom: 2px solid #ff003c;
         }
-
+        
         .alert-count {
-            background: var(--danger);
+            background: #ff003c;
             padding: 3px 10px;
             border-radius: 20px;
             font-size: 0.8rem;
         }
-
+        
         .system-status {
             display: flex;
             align-items: center;
@@ -213,174 +141,119 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
-
+        
         .status-led {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: var(--danger);
-            transition: all 0.3s;
+            background: #ff003c;
         }
-
+        
         .status-led.active {
-            background: var(--success);
-            box-shadow: 0 0 10px var(--success);
-            animation: pulse 2s infinite;
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
+        
         .alert-list {
-            flex: 1;
             max-height: 350px;
             overflow-y: auto;
         }
-
+        
         .alert-item {
-            background: rgba(255, 0, 60, 0.1);
-            border-left: 3px solid var(--danger);
+            background: rgba(255,0,60,0.1);
+            border-left: 3px solid #ff003c;
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 6px;
             font-size: 0.8rem;
-            animation: slideIn 0.3s ease;
         }
-
-        .alert-item.critical { border-left-color: var(--danger); }
-        .alert-item.moderate { border-left-color: var(--alert); }
-        .alert-item.minor { border-left-color: var(--success); }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* Charts */
+        
         .charts-section {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
-
+        
         .chart-card {
-            background: var(--bg-panel);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
             padding: 20px;
-        }
-
-        .chart-card h3 {
-            margin-bottom: 15px;
-            font-size: 1rem;
-            color: var(--primary);
-        }
-
-        canvas { max-height: 200px; }
-
-        /* Matrix */
-        .matrix-section {
-            background: var(--bg-panel);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+        }
+        
+        canvas { max-height: 200px; }
+        
+        .matrix-section {
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
         }
-
+        
         .matrix-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-top: 15px;
         }
-
+        
         .matrix-cell {
             text-align: center;
             padding: 15px;
             border-radius: 10px;
         }
-
-        .matrix-cell.tp { background: rgba(0, 243, 255, 0.15); border: 1px solid var(--primary); }
-        .matrix-cell.tn { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--success); }
-        .matrix-cell.fp { background: rgba(255, 183, 3, 0.15); border: 1px solid var(--alert); }
-        .matrix-cell.fn { background: rgba(255, 0, 60, 0.15); border: 1px solid var(--danger); }
-
-        .matrix-value { font-size: 1.5rem; font-weight: 700; }
-
+        
+        .tp { background: rgba(0,243,255,0.15); border: 1px solid #00f3ff; }
+        .tn { background: rgba(0,255,136,0.1); border: 1px solid #00ff88; }
+        .fp { background: rgba(255,183,3,0.15); border: 1px solid #ffb703; }
+        .fn { background: rgba(255,0,60,0.15); border: 1px solid #ff003c; }
+        
+        .matrix-value { font-size: 1.5rem; font-weight: bold; }
+        
         footer {
             text-align: center;
             padding: 20px;
-            border-top: 1px solid var(--glass-border);
-            color: var(--text-dim);
-            font-size: 0.8rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
-
+        
         @media (max-width: 768px) {
             .main-grid { grid-template-columns: 1fr; }
             .charts-section { grid-template-columns: 1fr; }
             .matrix-grid { grid-template-columns: repeat(2, 1fr); }
-            .nav-links { display: none; }
         }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo">
-        <i class="fas fa-car-crash"></i>
-        VisionGuard AI
+    <div class="logo"><i class="fas fa-car-crash"></i> VisionGuard AI</div>
+    <div class="nav-links">
+        <a onclick="scrollToSection('home')">Home</a>
+        <a onclick="scrollToSection('dashboard')">Live Monitor</a>
+        <a onclick="scrollToSection('analytics')">Analytics</a>
     </div>
-    <ul class="nav-links">
-        <li><a onclick="scrollToSection('home')">Home</a></li>
-        <li><a onclick="scrollToSection('dashboard')">Live Monitor</a></li>
-        <li><a onclick="scrollToSection('analytics')">Analytics</a></li>
-    </ul>
 </nav>
 
 <div class="container">
-    <!-- Hero Section -->
     <div class="hero" id="home">
-        <h1>Intelligent Multi-Feature<br>Accident Detection System</h1>
+        <h1>Intelligent <span>Multi-Feature</span><br>Accident Detection System</h1>
         <p>AI-powered real-time monitoring | 94.2% Accuracy | 1.3s Response Time</p>
     </div>
 
-    <!-- Metrics Grid -->
     <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-value" id="accuracy">94.2<span>%</span></div>
-            <div class="metric-label">Accuracy</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="precision">94.4<span>%</span></div>
-            <div class="metric-label">Precision</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="recall">94.0<span>%</span></div>
-            <div class="metric-label">Recall</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="f1">94.2<span>%</span></div>
-            <div class="metric-label">F1-Score</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="response">1.3<span>s</span></div>
-            <div class="metric-label">Response Time</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="accidentCount">0</div>
-            <div class="metric-label">Accidents Detected</div>
-        </div>
+        <div class="metric-card"><div class="metric-value" id="accuracy">94.2<span>%</span></div><div class="metric-label">Accuracy</div></div>
+        <div class="metric-card"><div class="metric-value" id="precision">94.4<span>%</span></div><div class="metric-label">Precision</div></div>
+        <div class="metric-card"><div class="metric-value" id="recall">94.0<span>%</span></div><div class="metric-label">Recall</div></div>
+        <div class="metric-card"><div class="metric-value" id="f1">94.2<span>%</span></div><div class="metric-label">F1-Score</div></div>
+        <div class="metric-card"><div class="metric-value" id="response">1.3<span>s</span></div><div class="metric-label">Response Time</div></div>
+        <div class="metric-card"><div class="metric-value" id="accidentCount">0</div><div class="metric-label">Accidents</div></div>
     </div>
 
-    <!-- Main Dashboard -->
     <div class="main-grid" id="dashboard">
         <div class="video-container">
-            <img id="videoFeed" src="/video_feed" alt="Live Feed" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22480%22%3E%3Crect width=%22640%22 height=%22480%22 fill=%22%23000%22/%3E%3Ctext x=%22200%22 y=%22240%22 fill=%22%23666%22%3EConnecting to camera...%3C/text%3E%3C/svg%3E'">
+            <img id="videoFeed" src="/video_feed" alt="Live Feed">
             <div class="video-overlay">
                 <i class="fas fa-car"></i> Vehicles: <span id="vehicleCount">0</span> |
                 <i class="fas fa-chart-line"></i> Confidence: <span id="confidenceVal">0</span>%
@@ -394,246 +267,122 @@
             </div>
             <div class="system-status">
                 <div class="status-led" id="statusLed"></div>
-                <span id="statusText">Connecting to server...</span>
+                <span id="statusText">Connecting...</span>
             </div>
             <div class="alert-list" id="alertList">
-                <div style="text-align: center; color: var(--text-dim); padding: 20px;">
-                    <i class="fas fa-shield-alt"></i> No active alerts
-                </div>
+                <div style="text-align:center;color:#666;padding:20px">No alerts</div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Section -->
     <div class="charts-section" id="analytics">
-        <div class="chart-card">
-            <h3><i class="fas fa-chart-line"></i> Detection Trend</h3>
-            <canvas id="trendChart"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3><i class="fas fa-chart-pie"></i> Severity Distribution</h3>
-            <canvas id="severityChart"></canvas>
-        </div>
+        <div class="chart-card"><h3><i class="fas fa-chart-line"></i> Detection Trend</h3><canvas id="trendChart"></canvas></div>
+        <div class="chart-card"><h3><i class="fas fa-chart-pie"></i> Severity Distribution</h3><canvas id="severityChart"></canvas></div>
     </div>
 
-    <!-- Confusion Matrix -->
     <div class="matrix-section">
         <h3><i class="fas fa-table"></i> Confusion Matrix (500 Test Videos)</h3>
         <div class="matrix-grid">
-            <div class="matrix-cell tp">
-                <div class="matrix-value">235</div>
-                <div>True Positive</div>
-                <small>Correct detection</small>
-            </div>
-            <div class="matrix-cell tn">
-                <div class="matrix-value">236</div>
-                <div>True Negative</div>
-                <small>Correct no-accident</small>
-            </div>
-            <div class="matrix-cell fp">
-                <div class="matrix-value">14</div>
-                <div>False Positive</div>
-                <small>False alarm</small>
-            </div>
-            <div class="matrix-cell fn">
-                <div class="matrix-value">15</div>
-                <div>False Negative</div>
-                <small>Missed accident</small>
-            </div>
+            <div class="matrix-cell tp"><div class="matrix-value">235</div><div>True Positive</div></div>
+            <div class="matrix-cell tn"><div class="matrix-value">236</div><div>True Negative</div></div>
+            <div class="matrix-cell fp"><div class="matrix-value">14</div><div>False Positive</div></div>
+            <div class="matrix-cell fn"><div class="matrix-value">15</div><div>False Negative</div></div>
         </div>
-        <div style="margin-top: 15px; text-align: center; font-size: 12px; color: var(--text-dim);">
-            Accuracy: (235+236)/500 = 94.2% | Precision: 235/249 = 94.4% | Recall: 235/250 = 94.0%
-        </div>
+        <p style="margin-top:15px;text-align:center;font-size:12px;color:#94a3b8">Accuracy: 94.2% | Precision: 94.4% | Recall: 94.0% | F1: 94.2%</p>
     </div>
 
-    <footer>
-        <p>© 2024 Intelligent Multi-Feature Accident Detection System | OOAD Project</p>
-        <p>Team: Akash R (24MIS0132) | Boopathi R (24MIS0499) | Vignesh E (24MIS0559)</p>
-    </footer>
+    <footer>© 2024 Intelligent Accident Detection System | Team: Akash R | Boopathi R | Vignesh E</footer>
 </div>
 
 <script>
-    // Socket.IO Connection
     const socket = io();
-    
-    // Chart variables
     let trendChart, severityChart;
     let detectionHistory = [];
     let severityData = { Minor: 0, Moderate: 0, Critical: 0 };
     
-    // Initialize Charts
-    function initCharts() {
-        // Trend Chart
-        const ctx1 = document.getElementById('trendChart').getContext('2d');
-        trendChart = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Vehicles Detected',
-                    data: [],
-                    borderColor: '#00f3ff',
-                    backgroundColor: 'rgba(0, 243, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { labels: { color: '#94a3b8' } }
-                },
-                scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                    x: { ticks: { color: '#94a3b8' } }
-                }
-            }
-        });
-        
-        // Severity Chart
-        const ctx2 = document.getElementById('severityChart').getContext('2d');
-        severityChart = new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: ['Minor', 'Moderate', 'Critical'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: ['#00ff88', '#ffb703', '#ff003c'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { labels: { color: '#94a3b8' }, position: 'bottom' }
-                }
-            }
-        });
-    }
+    // Initialize charts
+    trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Vehicles', data: [], borderColor: '#00f3ff', backgroundColor: 'rgba(0,243,255,0.1)', fill: true, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { display: false } } } }
+    });
     
-    // Update Metrics from Backend
+    severityChart = new Chart(document.getElementById('severityChart'), {
+        type: 'doughnut',
+        data: { labels: ['Minor', 'Moderate', 'Critical'], datasets: [{ data: [0,0,0], backgroundColor: ['#00ff88', '#ffb703', '#ff003c'] }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#94a3b8' }, position: 'bottom' } } }
+    });
+    
+    // Update metrics
     async function updateMetrics() {
         try {
-            const response = await fetch('/get_metrics');
-            const data = await response.json();
-            
+            const res = await fetch('/get_metrics');
+            const data = await res.json();
             document.getElementById('accuracy').innerHTML = data.accuracy + '<span>%</span>';
             document.getElementById('precision').innerHTML = data.precision + '<span>%</span>';
             document.getElementById('recall').innerHTML = data.recall + '<span>%</span>';
             document.getElementById('f1').innerHTML = data.f1_score + '<span>%</span>';
             document.getElementById('response').innerHTML = data.response_time + '<span>s</span>';
-            document.getElementById('accidentCount').innerText = data.accidents_detected || 0;
-        } catch (error) {
-            console.log('Metrics fetch error:', error);
-        }
+            document.getElementById('accidentCount').innerText = data.accidents_detected;
+        } catch(e) { console.log('Metrics error'); }
     }
     
-    // Add Alert to List
+    // Add alert
     function addAlert(severity, confidence) {
-        const alertList = document.getElementById('alertList');
+        const list = document.getElementById('alertList');
+        if(list.children[0] && list.children[0].innerText.includes('No alerts')) list.innerHTML = '';
         
-        // Clear placeholder
-        if (alertList.children[0] && alertList.children[0].innerText.includes('No active alerts')) {
-            alertList.innerHTML = '';
-        }
+        const div = document.createElement('div');
+        div.className = 'alert-item';
+        div.innerHTML = `<strong>${severity.toUpperCase()} Accident</strong><br>Confidence: ${confidence}%<br>Time: ${new Date().toLocaleTimeString()}<br><span style="color:#00ff88">✓ Emergency notified</span>`;
+        list.insertBefore(div, list.firstChild);
         
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert-item ${severity.toLowerCase()}`;
-        
-        const icons = {
-            Critical: '🚨',
-            Moderate: '⚠️',
-            Minor: '📢'
-        };
-        
-        alertDiv.innerHTML = `
-            <strong>${icons[severity] || '🚨'} ${severity.toUpperCase()} Accident</strong><br>
-            Confidence: ${confidence}%<br>
-            Time: ${new Date().toLocaleTimeString()}<br>
-            <small style="color: #00ff88;">✓ Emergency services notified</small>
-        `;
-        
-        alertList.insertBefore(alertDiv, alertList.firstChild);
-        
-        // Update counter
         let count = parseInt(document.getElementById('alertCount').innerText) + 1;
         document.getElementById('alertCount').innerText = count;
         
-        // Update severity chart
         severityData[severity]++;
         severityChart.data.datasets[0].data = [severityData.Minor, severityData.Moderate, severityData.Critical];
         severityChart.update();
-        
-        // Keep only last 15
-        while (alertList.children.length > 15) {
-            alertList.removeChild(alertList.lastChild);
-        }
     }
     
-    // Update Trend Chart
-    function updateTrendChart(vehicleCount) {
-        detectionHistory.push(vehicleCount);
-        if (detectionHistory.length > 30) detectionHistory.shift();
-        
-        trendChart.data.labels = detectionHistory.map((_, i) => i);
+    // Update trend
+    function updateTrend(vehicles) {
+        detectionHistory.push(vehicles);
+        if(detectionHistory.length > 30) detectionHistory.shift();
+        trendChart.data.labels = detectionHistory.map((_,i)=>i);
         trendChart.data.datasets[0].data = detectionHistory;
         trendChart.update();
     }
     
-    // Scroll to section
-    function scrollToSection(sectionId) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
+    function scrollToSection(id) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
     }
     
-    // Socket.IO Events
+    // Socket events
     socket.on('connect', () => {
-        console.log('Connected to server');
         document.getElementById('statusLed').classList.add('active');
         document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> System Active';
     });
     
-    socket.on('disconnect', () => {
-        console.log('Disconnected from server');
-        document.getElementById('statusLed').classList.remove('active');
-        document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reconnecting...';
-    });
-    
-    socket.on('accident_alert', (data) => {
-        console.log('Accident alert:', data);
-        addAlert(data.severity, data.confidence);
-    });
+    socket.on('accident_alert', (data) => addAlert(data.severity, data.confidence));
     
     socket.on('detection_update', (data) => {
-        console.log('Detection update:', data);
-        if (data.vehicle_count !== undefined) {
-            document.getElementById('vehicleCount').innerText = data.vehicle_count;
-            updateTrendChart(data.vehicle_count);
-        }
-        if (data.confidence !== undefined) {
-            document.getElementById('confidenceVal').innerText = data.confidence;
-        }
+        document.getElementById('vehicleCount').innerText = data.vehicle_count || 0;
+        document.getElementById('confidenceVal').innerText = data.confidence || 0;
+        if(data.vehicle_count) updateTrend(data.vehicle_count);
     });
     
-    // Initialize
-    initCharts();
-    updateMetrics();
-    
-    // Refresh metrics every 3 seconds
-    setInterval(updateMetrics, 3000);
-    
-    // Refresh video feed if it fails
+    // Refresh video feed if needed
     const videoFeed = document.getElementById('videoFeed');
     setInterval(() => {
-        if (videoFeed.complete && videoFeed.naturalHeight === 0) {
-            // Reload video feed if broken
+        if(videoFeed.complete && videoFeed.naturalHeight === 0) {
             videoFeed.src = '/video_feed?' + new Date().getTime();
         }
-    }, 5000);
+    }, 3000);
+    
+    // Initial load
+    updateMetrics();
+    setInterval(updateMetrics, 3000);
 </script>
 </body>
 </html>
