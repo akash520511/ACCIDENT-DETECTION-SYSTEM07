@@ -1,7 +1,3 @@
-"""
-Intelligent Multi-Feature Accident Detection System
-Complete Backend Server with Video Upload, Live Processing, and ML Integration
-"""
 
 from flask import Flask, render_template, Response, jsonify, request, send_from_directory
 from flask_socketio import SocketIO, emit
