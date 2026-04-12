@@ -6,7 +6,7 @@ from typing import Tuple, Dict, Any
 
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
-    "..", "models", "accident_detection_model", "best", "data.pkl"
+    "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "data.pkl"
 )
 
 # Global model variable
