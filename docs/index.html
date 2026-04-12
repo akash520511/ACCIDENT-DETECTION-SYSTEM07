@@ -21,7 +21,6 @@
             overflow-x: hidden;
         }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -36,7 +35,6 @@
             border-radius: 10px;
         }
 
-        /* Navigation */
         .navbar {
             background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(10px);
@@ -83,6 +81,7 @@
             text-decoration: none;
             transition: all 0.3s;
             font-weight: 500;
+            cursor: pointer;
         }
 
         .nav-links a:hover, .nav-links a.active {
@@ -120,7 +119,6 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
 
-        /* Hero Section */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -246,7 +244,6 @@
             margin-top: 0.5rem;
         }
 
-        /* Container */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -260,7 +257,6 @@
             font-weight: 700;
         }
 
-        /* Demo Section */
         .demo-section {
             padding: 5rem 0;
             background: #0f1338;
@@ -287,7 +283,7 @@
             object-fit: cover;
         }
 
-        #heatmapCanvas {
+        #heatmapCanvas, #uploadHeatmapCanvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -433,7 +429,6 @@
             color: transparent;
         }
 
-        /* Upload Section */
         .upload-section {
             margin-bottom: 2rem;
         }
@@ -524,7 +519,6 @@
             cursor: not-allowed;
         }
 
-        /* Progress Bar */
         .progress-container {
             margin-top: 1rem;
             display: none;
@@ -545,7 +539,6 @@
             border-radius: 2px;
         }
 
-        /* Features Section */
         .features {
             padding: 5rem 0;
         }
@@ -596,7 +589,6 @@
             line-height: 1.6;
         }
 
-        /* Dashboard Section */
         .dashboard-section {
             padding: 5rem 0;
             display: none;
@@ -696,7 +688,6 @@
             transform: scale(1.05);
         }
 
-        /* Modal */
         .modal {
             position: fixed;
             top: 0;
@@ -770,7 +761,6 @@
             justify-content: flex-end;
         }
 
-        /* Notification */
         .notification {
             position: fixed;
             bottom: 20px;
@@ -808,7 +798,6 @@
             background: #6366f1;
         }
 
-        /* Spinner */
         .spinner {
             width: 40px;
             height: 40px;
@@ -823,7 +812,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Footer */
         footer {
             padding: 2rem;
             text-align: center;
@@ -831,7 +819,6 @@
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Responsive */
         @media (max-width: 968px) {
             .demo-container {
                 grid-template-columns: 1fr;
@@ -874,7 +861,6 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">
@@ -882,10 +868,10 @@
                 <span>AccidentGuard<span class="highlight"> AI</span></span>
             </div>
             <div class="nav-links">
-                <a href="#" onclick="showSection('home')" id="navHome" class="active"><i class="fas fa-home"></i> Home</a>
-                <a href="#" onclick="showSection('demo')" id="navDemo"><i class="fas fa-video"></i> Live Demo</a>
-                <a href="#" onclick="showSection('dashboard')" id="navDashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a href="#" onclick="showSection('features')" id="navFeatures"><i class="fas fa-cogs"></i> Features</a>
+                <a onclick="showSection('home')" id="navHome" class="active"><i class="fas fa-home"></i> Home</a>
+                <a onclick="showSection('demo')" id="navDemo"><i class="fas fa-video"></i> Live Demo</a>
+                <a onclick="showSection('dashboard')" id="navDashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a onclick="showSection('features')" id="navFeatures"><i class="fas fa-cogs"></i> Features</a>
             </div>
             <div class="nav-status">
                 <span class="status-indicator online" id="statusIndicator"></span>
@@ -894,7 +880,6 @@
         </div>
     </nav>
 
-    <!-- Home Section -->
     <section id="homeSection" class="hero">
         <div class="hero-content">
             <h1 class="hero-title">
@@ -930,12 +915,10 @@
         </div>
     </section>
 
-    <!-- Demo Section -->
     <section id="demoSection" class="demo-section" style="display: none;">
         <div class="container">
             <h2 class="section-title">Live Accident Detection</h2>
             
-            <!-- Mode Selector -->
             <div class="mode-selector">
                 <button class="mode-btn active" onclick="setMode('camera')" id="cameraModeBtn">
                     <i class="fas fa-camera"></i> Live Camera
@@ -945,14 +928,13 @@
                 </button>
             </div>
             
-            <!-- Camera Mode -->
-            <div id="cameraMode" class="upload-section">
+            <div id="cameraMode">
                 <div class="demo-container">
                     <div class="video-container">
                         <video id="videoFeed" autoplay playsinline></video>
                         <canvas id="heatmapCanvas"></canvas>
                         <div class="detection-overlay" id="detectionOverlay" style="display: none;">
-                            <div class="alert-banner" id="alertBanner">
+                            <div class="alert-banner">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <span id="alertMessage">Accident Detected!</span>
                             </div>
@@ -999,7 +981,6 @@
                 </div>
             </div>
             
-            <!-- Upload Mode -->
             <div id="uploadMode" style="display: none;">
                 <div class="upload-area" onclick="document.getElementById('videoUpload').click()">
                     <i class="fas fa-cloud-upload-alt"></i>
@@ -1067,7 +1048,6 @@
         </div>
     </section>
 
-    <!-- Dashboard Section -->
     <section id="dashboardSection" class="dashboard-section">
         <div class="container">
             <h2 class="section-title">Analytics Dashboard</h2>
@@ -1132,7 +1112,6 @@
         </div>
     </section>
 
-    <!-- Features Section -->
     <section id="featuresSection" class="features" style="display: none;">
         <div class="container">
             <h2 class="section-title">Key Features</h2>
@@ -1140,47 +1119,44 @@
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-bolt"></i></div>
                     <h3>Real-Time Detection</h3>
-                    <p>Average response time of 1.3 seconds with 94.2% accuracy using advanced deep learning models</p>
+                    <p>Average response time of 1.3 seconds with 94.2% accuracy</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
                     <h3>Severity Analysis</h3>
-                    <p>Classifies accidents as Minor, Major, or Critical based on multiple factors including impact force and vehicle count</p>
+                    <p>Classifies accidents as Minor, Major, or Critical</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-fire"></i></div>
                     <h3>Impact Heatmap</h3>
-                    <p>Visualizes collision impact zones with color-coded intensity (Blue=Low, Red=High impact)</p>
+                    <p>Visualizes collision impact zones with color-coded intensity</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-bell"></i></div>
                     <h3>Emergency Alerts</h3>
-                    <p>Automatic notification to emergency services with location, severity, and video evidence</p>
+                    <p>Automatic notification to emergency services</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
                     <h3>Live Dashboard</h3>
-                    <p>Real-time statistics, accident history, and system performance monitoring</p>
+                    <p>Real-time statistics and system performance monitoring</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                     <h3>Video Upload</h3>
-                    <p>Upload and analyze pre-recorded videos for accident detection and forensic analysis</p>
+                    <p>Upload and analyze pre-recorded videos</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
-            <p>&copy; 2024 AccidentGuard AI - Intelligent Multi-Feature Accident Detection System | All Rights Reserved</p>
+            <p>&copy; 2024 AccidentGuard AI - Intelligent Multi-Feature Accident Detection System</p>
         </div>
     </footer>
 
     <script>
-        // Global variables
-        let ws = null;
         let videoStream = null;
         let detectionInterval = null;
         let detectionChart = null;
@@ -1188,16 +1164,13 @@
         let currentMode = 'camera';
         let uploadedVideoFile = null;
         let analysisResults = [];
-        let videoAnalysisInterval = null;
 
-        // Mock data
         const mockHistory = [
             { id: 1, timestamp: new Date().toISOString(), severity: 'Minor', confidence: 87, vehicles: 2, location: 'Main Street & 5th Ave' },
-            { id: 2, timestamp: new Date(Date.now() - 3600000).toISOString(), severity: 'Major', confidence: 94, vehicles: 3, location: 'Highway 101, Mile 42' },
-            { id: 3, timestamp: new Date(Date.now() - 7200000).toISOString(), severity: 'Critical', confidence: 98, vehicles: 4, location: 'Downtown Intersection' }
+            { id: 2, timestamp: new Date(Date.now() - 3600000).toISOString(), severity: 'Major', confidence: 94, vehicles: 3, location: 'Highway 101' },
+            { id: 3, timestamp: new Date(Date.now() - 7200000).toISOString(), severity: 'Critical', confidence: 98, vehicles: 4, location: 'Downtown' }
         ];
 
-        // Navigation
         function showSection(section) {
             document.getElementById('homeSection').style.display = section === 'home' ? 'flex' : 'none';
             document.getElementById('demoSection').style.display = section === 'demo' ? 'block' : 'none';
@@ -1215,15 +1188,12 @@
             }
         }
 
-        // Set mode (camera or upload)
         function setMode(mode) {
             currentMode = mode;
             
-            // Update button styles
             document.getElementById('cameraModeBtn').classList.toggle('active', mode === 'camera');
             document.getElementById('uploadModeBtn').classList.toggle('active', mode === 'upload');
             
-            // Show/hide modes
             document.getElementById('cameraMode').style.display = mode === 'camera' ? 'block' : 'none';
             document.getElementById('uploadMode').style.display = mode === 'upload' ? 'block' : 'none';
             
@@ -1238,7 +1208,6 @@
             }
         }
 
-        // Handle video upload
         function handleVideoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1262,10 +1231,20 @@
             document.getElementById('uploadControls').style.display = 'flex';
             document.getElementById('progressContainer').style.display = 'none';
             
+            // Reset analysis results
+            analysisResults = [];
+            document.getElementById('uploadStatus').innerHTML = 'Ready';
+            document.getElementById('uploadStatus').style.background = 'rgba(16,185,129,0.2)';
+            document.getElementById('uploadConfidenceFill').style.width = '0%';
+            document.getElementById('uploadConfidenceText').textContent = '0%';
+            document.getElementById('uploadSeverity').textContent = 'None';
+            document.getElementById('uploadSeverity').className = 'severity-level';
+            document.getElementById('uploadVehicleCount').textContent = '0';
+            document.getElementById('uploadResponseTime').textContent = '0.00s';
+            
             showNotification(`Video loaded: ${file.name}`, 'success');
         }
 
-        // Analyze uploaded video
         async function analyzeUploadedVideo() {
             if (!uploadedVideoFile) {
                 showNotification('Please upload a video first', 'error');
@@ -1285,30 +1264,38 @@
             
             analysisResults = [];
             
-            // Simulate video analysis
+            // Wait for video metadata
+            await new Promise(resolve => {
+                if (video.readyState >= 1) {
+                    resolve();
+                } else {
+                    video.addEventListener('loadedmetadata', resolve);
+                }
+            });
+            
             let duration = video.duration || 30;
-            let analysisDuration = Math.min(duration, 60); // Analyze up to 60 seconds
-            let frames = Math.floor(analysisDuration / 0.5); // Analyze every 0.5 seconds
+            let analysisDuration = Math.min(duration, 60);
+            let frames = Math.floor(analysisDuration / 0.5);
             
             for (let i = 0; i <= frames; i++) {
                 const progress = (i / frames) * 100;
                 progressFill.style.width = `${progress}%`;
                 progressText.textContent = `Analyzing video... ${Math.round(progress)}%`;
                 
-                // Simulate detection at current timestamp
                 const timestamp = (i * 0.5);
                 if (timestamp <= analysisDuration) {
                     video.currentTime = timestamp;
                     await new Promise(resolve => setTimeout(resolve, 50));
                     
-                    // Capture frame
                     if (canvas.width !== video.videoWidth) {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
+                        canvas.width = video.videoWidth || 640;
+                        canvas.height = video.videoHeight || 480;
                     }
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    // Simulate detection
+                    if (video.videoWidth && video.videoHeight) {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    }
+                    
                     const random = Math.random();
                     const isAccident = random > 0.85;
                     
@@ -1332,21 +1319,29 @@
                             vehicleCount: Math.floor(Math.random() * 5) + 1
                         });
                         
-                        // Show heatmap
-                        drawHeatmapOnCanvas(ctx, canvas.width, canvas.height);
+                        // Draw heatmap
+                        const imageData = ctx.createImageData(canvas.width, canvas.height);
+                        for (let j = 0; j < imageData.data.length; j += 4) {
+                            const intensity = Math.random();
+                            imageData.data[j] = Math.min(255, intensity * 255);
+                            imageData.data[j + 1] = Math.min(255, intensity * 100);
+                            imageData.data[j + 2] = Math.min(255, (1 - intensity) * 255);
+                            imageData.data[j + 3] = intensity * 150;
+                        }
+                        ctx.putImageData(imageData, 0, 0);
                     }
                 }
                 
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 80));
             }
             
             progressContainer.style.display = 'none';
             
-            // Display results
             if (analysisResults.length > 0) {
-                const worstAccident = analysisResults.reduce((max, curr) => 
-                    getSeverityWeight(curr.severity) > getSeverityWeight(max.severity) ? curr : max
-                );
+                const worstAccident = analysisResults.reduce((max, curr) => {
+                    const getWeight = (s) => s === 'Critical' ? 3 : s === 'Major' ? 2 : 1;
+                    return getWeight(curr.severity) > getWeight(max.severity) ? curr : max;
+                });
                 
                 document.getElementById('uploadStatus').innerHTML = '<span class="status-dot" style="background: #ef4444;"></span> Accident Detected!';
                 document.getElementById('uploadStatus').style.background = 'rgba(239,68,68,0.2)';
@@ -1366,51 +1361,15 @@
                     overlay.style.display = 'none';
                 }, 8000);
                 
-                // Save to history
                 saveToHistory(worstAccident);
-                
                 showNotification(`Analysis complete! ${analysisResults.length} incidents detected`, 'success');
             } else {
                 document.getElementById('uploadStatus').innerHTML = 'No accidents detected';
                 document.getElementById('uploadStatus').style.background = 'rgba(16,185,129,0.2)';
-                document.getElementById('uploadConfidenceFill').style.width = '0%';
-                document.getElementById('uploadConfidenceText').textContent = '0%';
-                document.getElementById('uploadSeverity').textContent = 'None';
-                document.getElementById('uploadVehicleCount').textContent = '0';
                 showNotification('Analysis complete - No accidents detected', 'info');
             }
         }
 
-        // Helper function for severity weight
-        function getSeverityWeight(severity) {
-            switch(severity) {
-                case 'Critical': return 3;
-                case 'Major': return 2;
-                case 'Minor': return 1;
-                default: return 0;
-            }
-        }
-
-        // Draw heatmap on canvas
-        function drawHeatmapOnCanvas(ctx, width, height) {
-            const imageData = ctx.createImageData(width, height);
-            
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                const intensity = Math.random();
-                imageData.data[i] = Math.min(255, intensity * 255);
-                imageData.data[i + 1] = Math.min(255, intensity * 100);
-                imageData.data[i + 2] = Math.min(255, (1 - intensity) * 255);
-                imageData.data[i + 3] = intensity * 150;
-            }
-            
-            ctx.putImageData(imageData, 0, 0);
-            
-            setTimeout(() => {
-                ctx.clearRect(0, 0, width, height);
-            }, 2000);
-        }
-
-        // Save to history
         function saveToHistory(accident) {
             const newRecord = {
                 id: Date.now(),
@@ -1424,7 +1383,6 @@
             if (mockHistory.length > 50) mockHistory.pop();
         }
 
-        // Reset upload
         function resetUpload() {
             uploadedVideoFile = null;
             document.getElementById('videoUpload').value = '';
@@ -1435,13 +1393,13 @@
             document.getElementById('uploadConfidenceFill').style.width = '0%';
             document.getElementById('uploadConfidenceText').textContent = '0%';
             document.getElementById('uploadSeverity').textContent = 'None';
+            document.getElementById('uploadSeverity').className = 'severity-level';
             document.getElementById('uploadVehicleCount').textContent = '0';
             document.getElementById('uploadResponseTime').textContent = '0.00s';
             analysisResults = [];
             showNotification('Reset complete. Upload a new video.', 'info');
         }
 
-        // Download report
         function downloadReport() {
             if (analysisResults.length === 0) {
                 showNotification('No analysis results to download', 'error');
@@ -1469,23 +1427,26 @@
             showNotification('Report downloaded', 'success');
         }
 
-        // Start live demo
         async function startLiveDemo() {
             showSection('demo');
             setMode('camera');
-            await initCamera();
-            initWebSocket();
-            isDemoRunning = true;
-            showNotification('Live detection started', 'success');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('videoFeed');
+                video.srcObject = stream;
+                videoStream = stream;
+                startFrameCapture();
+                isDemoRunning = true;
+                showNotification('Live detection started', 'success');
+            } catch (err) {
+                showNotification('Camera access required for accident detection', 'error');
+                useMockVideo();
+            }
         }
 
-        // Stop demo
         function stopDemo() {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
-            }
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close();
             }
             if (detectionInterval) {
                 clearInterval(detectionInterval);
@@ -1494,22 +1455,6 @@
             showNotification('Detection stopped', 'info');
         }
 
-        // Initialize camera
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('videoFeed');
-                video.srcObject = stream;
-                videoStream = stream;
-                startFrameCapture();
-            } catch (err) {
-                console.error('Camera access denied:', err);
-                showNotification('Camera access required for accident detection', 'error');
-                useMockVideo();
-            }
-        }
-
-        // Use mock video
         function useMockVideo() {
             const video = document.getElementById('videoFeed');
             const canvas = document.createElement('canvas');
@@ -1532,17 +1477,17 @@
                 
                 frame += 5;
                 video.srcObject = canvas.captureStream();
+                simulateDetection();
             }, 100);
         }
 
-        // Start frame capture
         function startFrameCapture() {
             const video = document.getElementById('videoFeed');
             const canvas = document.getElementById('heatmapCanvas');
             const ctx = canvas.getContext('2d');
             
             detectionInterval = setInterval(() => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -1551,20 +1496,19 @@
             }, 500);
         }
 
-        // Simulate detection
         function simulateDetection() {
             const random = Math.random();
             const isAccident = random > 0.85;
             
             if (isAccident) {
-                const severity = Math.random();
+                const severityRand = Math.random();
                 let severityLevel = 'Minor';
                 let confidence = 70 + Math.random() * 25;
                 
-                if (severity > 0.8) {
+                if (severityRand > 0.8) {
                     severityLevel = 'Critical';
                     confidence = 90 + Math.random() * 9;
-                } else if (severity > 0.5) {
+                } else if (severityRand > 0.5) {
                     severityLevel = 'Major';
                     confidence = 80 + Math.random() * 15;
                 }
@@ -1587,28 +1531,6 @@
             }
         }
 
-        // Initialize WebSocket
-        function initWebSocket() {
-            const wsUrl = `ws://${window.location.hostname}:8000/ws/video/demo`;
-            ws = new WebSocket(wsUrl);
-            
-            ws.onopen = () => {
-                console.log('WebSocket connected');
-                updateSystemStatus(true);
-            };
-            
-            ws.onerror = () => {
-                console.log('WebSocket not available, using simulation mode');
-                updateSystemStatus(false);
-            };
-            
-            ws.onclose = () => {
-                console.log('WebSocket disconnected, using simulation');
-                updateSystemStatus(false);
-            };
-        }
-
-        // Update detection UI
         function updateDetectionUI(detection) {
             const overlay = document.getElementById('detectionOverlay');
             const alertMessage = document.getElementById('alertMessage');
@@ -1631,10 +1553,7 @@
                         break;
                 }
                 alertMessage.textContent = message;
-                
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                }, 10000);
+                setTimeout(() => { overlay.style.display = 'none'; }, 8000);
             } else {
                 overlay.style.display = 'none';
                 document.getElementById('severityLevel').className = 'severity-level';
@@ -1658,81 +1577,36 @@
                 statusBadge.style.color = '#10b981';
             }
             
-            generateRandomHeatmap();
-        }
-
-        // Generate random heatmap
-        function generateRandomHeatmap() {
             const canvas = document.getElementById('heatmapCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            if (canvas.width === 0) return;
-            
-            const imageData = ctx.createImageData(canvas.width, canvas.height);
-            
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                const intensity = Math.random();
-                imageData.data[i] = Math.min(255, intensity * 255);
-                imageData.data[i + 1] = Math.min(255, intensity * 100);
-                imageData.data[i + 2] = Math.min(255, (1 - intensity) * 255);
-                imageData.data[i + 3] = intensity * 100;
+            if (canvas.width && detection.accident_detected) {
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.createImageData(canvas.width, canvas.height);
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    const intensity = Math.random();
+                    imageData.data[i] = intensity * 255;
+                    imageData.data[i + 1] = intensity * 100;
+                    imageData.data[i + 2] = (1 - intensity) * 255;
+                    imageData.data[i + 3] = intensity * 100;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 2000);
             }
-            
-            ctx.putImageData(imageData, 0, 0);
-            
-            setTimeout(() => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }, 2000);
         }
 
-        // Capture snapshot
         function captureSnapshot() {
             const video = document.getElementById('videoFeed');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-            
+            canvas.getContext('2d').drawImage(video, 0, 0);
             const link = document.createElement('a');
-            link.download = `accident-snapshot-${Date.now()}.png`;
+            link.download = `snapshot-${Date.now()}.png`;
             link.href = canvas.toDataURL();
             link.click();
-            
             showNotification('Snapshot saved', 'success');
         }
 
-        // Update system status
-        function updateSystemStatus(isOnline) {
-            const indicator = document.getElementById('statusIndicator');
-            const text = document.getElementById('statusText');
-            
-            if (isOnline) {
-                indicator.className = 'status-indicator online';
-                text.textContent = 'System Online';
-            } else {
-                indicator.className = 'status-indicator offline';
-                text.textContent = 'Simulation Mode';
-            }
-        }
-
-        // Dashboard functions
         async function loadDashboardData() {
-            try {
-                const response = await fetch('/api/stats');
-                if (response.ok) {
-                    const stats = await response.json();
-                    updateDashboardStats(stats);
-                } else {
-                    useMockDashboardData();
-                }
-            } catch (error) {
-                useMockDashboardData();
-            }
-            loadHistoryData();
-        }
-
-        function useMockDashboardData() {
             const stats = {
                 total_detections: 1247,
                 accident_detections: 342,
@@ -1742,6 +1616,7 @@
                 recent_detections: 23
             };
             updateDashboardStats(stats);
+            loadHistoryData();
         }
 
         function updateDashboardStats(stats) {
@@ -1755,39 +1630,21 @@
             document.getElementById('recentDetections').textContent = stats.recent_detections || 0;
         }
 
-        async function loadHistoryData() {
-            const tbody = document.getElementById('historyTableBody');
-            
-            try {
-                const response = await fetch('/api/history?limit=20');
-                if (response.ok) {
-                    const history = await response.json();
-                    displayHistory(history);
-                } else {
-                    displayHistory(mockHistory);
-                }
-            } catch (error) {
-                displayHistory(mockHistory);
-            }
+        function loadHistoryData() {
+            displayHistory(mockHistory);
         }
 
         function displayHistory(history) {
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
-            
-            if (history.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6">No records found</td></tr>';
-                return;
-            }
-            
             history.forEach(record => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${new Date(record.timestamp).toLocaleString()}</td>
                     <td><span class="severity-badge severity-${record.severity.toLowerCase()}">${record.severity}</span></td>
                     <td>${record.confidence}%</td>
-                    <td>${record.vehicles || record.vehicle_count || 0}</td>
-                    <td>${record.location || 'Camera Feed'}</td>
+                    <td>${record.vehicles || 2}</td>
+                    <td>${record.location}</td>
                     <td><button class="btn-view" onclick="viewDetails(${record.id})">View</button></td>
                 `;
             });
@@ -1795,9 +1652,7 @@
 
         function initDashboardChart() {
             const ctx = document.getElementById('detectionTrendChart').getContext('2d');
-            
             if (detectionChart) detectionChart.destroy();
-            
             detectionChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -1806,7 +1661,7 @@
                         label: 'Accident Detections per Hour',
                         data: Array.from({length: 24}, () => Math.floor(Math.random() * 10)),
                         borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        backgroundColor: 'rgba(99,102,241,0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -1823,133 +1678,61 @@
             });
         }
 
-        function refreshDashboard() {
-            loadDashboardData();
-            showNotification('Dashboard refreshed', 'success');
-        }
-
+        function refreshDashboard() { loadDashboardData(); showNotification('Dashboard refreshed', 'success'); }
         function exportDashboardData() {
-            const data = {
-                exportDate: new Date().toISOString(),
-                metrics: {
-                    totalDetections: document.getElementById('totalDetections').textContent,
-                    accidentDetections: document.getElementById('accidentDetections').textContent,
-                    avgConfidence: document.getElementById('avgConfidence').textContent
-                }
-            };
-            
+            const data = { exportDate: new Date().toISOString(), metrics: { total: document.getElementById('totalDetections').textContent } };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `accident-report-${Date.now()}.json`;
+            link.download = `report-${Date.now()}.json`;
             link.click();
-            
             showNotification('Report exported', 'success');
         }
 
         function viewDetails(id) {
             const record = mockHistory.find(r => r.id === id) || mockHistory[0];
-            
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Accident Details</h2>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
+                    <div class="modal-header"><h2>Accident Details</h2><button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button></div>
                     <div class="modal-body">
                         <p><strong>Time:</strong> ${new Date(record.timestamp).toLocaleString()}</p>
                         <p><strong>Severity:</strong> <span class="severity-badge severity-${record.severity.toLowerCase()}">${record.severity}</span></p>
                         <p><strong>Confidence:</strong> ${record.confidence}%</p>
-                        <p><strong>Vehicles Involved:</strong> ${record.vehicles || 2}</p>
+                        <p><strong>Vehicles:</strong> ${record.vehicles || 2}</p>
                         <p><strong>Location:</strong> ${record.location}</p>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" onclick="acknowledgeAlert(${record.id}); this.closest('.modal').remove()">Acknowledge</button>
-                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
-                    </div>
+                    <div class="modal-footer"><button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button></div>
                 </div>
             `;
-            
             document.body.appendChild(modal);
-        }
-
-        function acknowledgeAlert(id) {
-            showNotification(`Alert #${id} acknowledged`, 'success');
         }
 
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            
+            notification.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${message}</span>`;
             document.body.appendChild(notification);
-            
             setTimeout(() => notification.remove(), 3000);
         }
 
-        // Initialize performance charts
-        function initPerformanceCharts() {
-            const metrics = [
-                { id: 'accuracyChart', value: 94.2, color: '#10b981' },
-                { id: 'precisionChart', value: 94.4, color: '#6366f1' },
-                { id: 'recallChart', value: 94.0, color: '#f59e0b' },
-                { id: 'f1Chart', value: 94.2, color: '#ef4444' }
-            ];
-            
-            metrics.forEach(metric => {
-                const canvas = document.getElementById(metric.id);
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    const centerX = canvas.width / 2;
-                    const centerY = canvas.height / 2;
-                    const radius = 70;
-                    
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                    ctx.fill();
-                    
-                    const endAngle = (metric.value / 100) * 2 * Math.PI;
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, -Math.PI / 2, endAngle - Math.PI / 2);
-                    ctx.strokeStyle = metric.color;
-                    ctx.lineWidth = 12;
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 20px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`${metric.value}%`, centerX, centerY);
-                }
-            });
-        }
-
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initPerformanceCharts();
             showSection('home');
         });
 
-        // Make functions global
         window.showSection = showSection;
         window.startLiveDemo = startLiveDemo;
         window.stopDemo = stopDemo;
         window.captureSnapshot = captureSnapshot;
-        window.refreshDashboard = refreshDashboard;
-        window.exportDashboardData = exportDashboardData;
-        window.viewDetails = viewDetails;
-        window.acknowledgeAlert = acknowledgeAlert;
         window.setMode = setMode;
         window.handleVideoUpload = handleVideoUpload;
         window.analyzeUploadedVideo = analyzeUploadedVideo;
         window.resetUpload = resetUpload;
         window.downloadReport = downloadReport;
+        window.refreshDashboard = refreshDashboard;
+        window.exportDashboardData = exportDashboardData;
+        window.viewDetails = viewDetails;
     </script>
 </body>
 </html>
