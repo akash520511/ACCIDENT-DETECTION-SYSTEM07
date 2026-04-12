@@ -2,1737 +2,438 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Intelligent Accident Detection System | AI-Powered Real-Time Safety</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0e27;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #1a1f3e;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-        }
-
-        .navbar {
-            background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo i {
-            color: #6366f1;
-            font-size: 1.8rem;
-        }
-
-        .highlight {
-            color: #6366f1;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: #ffffff;
-            text-decoration: none;
-            transition: all 0.3s;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .nav-links a:hover, .nav-links a.active {
-            color: #6366f1;
-        }
-
-        .nav-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            background: rgba(255,255,255,0.1);
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-indicator.online {
-            background: #10b981;
-            box-shadow: 0 0 10px #10b981;
-        }
-
-        .status-indicator.offline {
-            background: #ef4444;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 6rem 2rem;
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3e 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            max-width: 900px;
-        }
-
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 0.875rem 2rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99,102,241,0.3);
-        }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 3rem;
-            margin-top: 4rem;
-            position: relative;
-            z-index: 1;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .stat-card {
-            text-align: center;
-            background: rgba(255,255,255,0.05);
-            padding: 1.5rem 2rem;
-            border-radius: 1rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .stat-label {
-            color: #94a3b8;
-            margin-top: 0.5rem;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            font-weight: 700;
-        }
-
-        .demo-section {
-            padding: 5rem 0;
-            background: #0f1338;
-        }
-
-        .demo-container {
-            display: grid;
-            grid-template-columns: 1fr 0.4fr;
-            gap: 2rem;
-        }
-
-        .video-container {
-            position: relative;
-            background: #000;
-            border-radius: 1rem;
-            overflow: hidden;
-            aspect-ratio: 16/9;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        #videoFeed, #uploadedVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        #heatmapCanvas, #uploadHeatmapCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .detection-overlay {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            right: 1rem;
-            z-index: 10;
-        }
-
-        .alert-banner {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            animation: slideDown 0.5s ease;
-            box-shadow: 0 10px 20px rgba(239,68,68,0.3);
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .detection-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .info-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s;
-        }
-
-        .info-card:hover {
-            transform: translateY(-5px);
-            border-color: #6366f1;
-        }
-
-        .info-card h3 {
-            font-size: 0.875rem;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .info-card h3 i {
-            margin-right: 0.5rem;
-            color: #6366f1;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(16, 185, 129, 0.2);
-            border-radius: 2rem;
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        .confidence-meter {
-            position: relative;
-            height: 2rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 1rem;
-            overflow: hidden;
-        }
-
-        .confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #6366f1, #10b981);
-            transition: width 0.3s ease;
-            border-radius: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .confidence-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: 700;
-            font-size: 0.875rem;
-        }
-
-        .severity-indicator {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .severity-level {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .severity-critical {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .severity-major {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
-        }
-
-        .severity-minor {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-
-        .vehicle-count, .response-time {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .upload-section {
-            margin-bottom: 2rem;
-        }
-
-        .upload-area {
-            background: rgba(255,255,255,0.05);
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .upload-area:hover {
-            border-color: #6366f1;
-            background: rgba(99,102,241,0.1);
-        }
-
-        .upload-area i {
-            font-size: 3rem;
-            color: #6366f1;
-            margin-bottom: 1rem;
-        }
-
-        .upload-area p {
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            justify-content: center;
-        }
-
-        .mode-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: transparent;
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .control-bar {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .control-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .control-btn:hover {
-            background: #6366f1;
-            transform: translateY(-2px);
-        }
-
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .progress-container {
-            margin-top: 1rem;
-            display: none;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.3s;
-            border-radius: 2px;
-        }
-
-        .features {
-            padding: 5rem 0;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .feature-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            border-color: #6366f1;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .feature-icon {
-            width: 4rem;
-            height: 4rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-        }
-
-        .feature-icon i {
-            font-size: 2rem;
-        }
-
-        .feature-card h3 {
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-        }
-
-        .feature-card p {
-            color: #94a3b8;
-            line-height: 1.6;
-        }
-
-        .dashboard-section {
-            padding: 5rem 0;
-            display: none;
-        }
-
-        .dashboard-section.active {
-            display: block;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-5px);
-            border-color: #6366f1;
-        }
-
-        .stat-box h4 {
-            color: #94a3b8;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .chart-container {
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .history-table {
-            width: 100%;
-            overflow-x: auto;
-            background: rgba(255,255,255,0.05);
-            border-radius: 1rem;
-            padding: 1rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        th {
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
-        .severity-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            display: inline-block;
-        }
-
-        .btn-view {
-            background: #6366f1;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-view:hover {
-            background: #4f46e5;
-            transform: scale(1.05);
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background: #1a1f3e;
-            border-radius: 1rem;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-
-        .modal-close:hover {
-            transform: rotate(90deg);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 2000;
-            animation: slideInRight 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .notification-success {
-            background: #10b981;
-        }
-
-        .notification-error {
-            background: #ef4444;
-        }
-
-        .notification-info {
-            background: #6366f1;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #6366f1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 2rem auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        footer {
-            padding: 2rem;
-            text-align: center;
-            color: #94a3b8;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        @media (max-width: 968px) {
-            .demo-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .hero-stats {
-                gap: 1rem;
-            }
-            
-            .stat-card {
-                padding: 1rem;
-            }
-            
-            .section-title {
-                font-size: 1.75rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 1rem;
-            }
-            
-            .hero-buttons {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Accident Detection System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="docs/style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-container" id="navbar">
+        <div class="nav-content">
             <div class="logo">
-                <i class="fas fa-car-crash"></i>
-                <span>AccidentGuard<span class="highlight"> AI</span></span>
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <span class="logo-text">AccidentAI</span>
             </div>
             <div class="nav-links">
-                <a onclick="showSection('home')" id="navHome" class="active"><i class="fas fa-home"></i> Home</a>
-                <a onclick="showSection('demo')" id="navDemo"><i class="fas fa-video"></i> Live Demo</a>
-                <a onclick="showSection('dashboard')" id="navDashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a onclick="showSection('features')" id="navFeatures"><i class="fas fa-cogs"></i> Features</a>
+                <a href="#home" class="nav-link active" data-section="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#upload" class="nav-link" data-section="upload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Upload</span>
+                </a>
+                <a href="#live" class="nav-link" data-section="live">
+                    <i class="fas fa-video"></i>
+                    <span>Live Detection</span>
+                </a>
+                <a href="#history" class="nav-link" data-section="history">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </a>
             </div>
-            <div class="nav-status">
-                <span class="status-indicator online" id="statusIndicator"></span>
-                <span id="statusText">System Online</span>
+            <div class="nav-actions">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">System Active</span>
+                </div>
             </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
 
-    <section id="homeSection" class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">
-                Intelligent Multi-Feature
-                <span class="gradient-text">Accident Detection System</span>
-            </h1>
-            <p class="hero-subtitle">
-                AI-powered real-time accident detection with severity analysis, 
-                impact visualization, and automated emergency response. Achieving 94.2% accuracy with 1.3s response time.
-            </p>
-            <div class="hero-buttons">
-                <button class="btn btn-primary" onclick="startLiveDemo()">
-                    <i class="fas fa-play"></i> Start Live Demo
-                </button>
-                <button class="btn btn-secondary" onclick="showSection('dashboard')">
-                    <i class="fas fa-chart-line"></i> View Dashboard
-                </button>
-            </div>
-        </div>
-        <div class="hero-stats">
-            <div class="stat-card">
-                <div class="stat-value">94.2%</div>
-                <div class="stat-label">Accuracy</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">1.3s</div>
-                <div class="stat-label">Response Time</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">24/7</div>
-                <div class="stat-label">Monitoring</div>
-            </div>
-        </div>
-    </section>
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#home" class="mobile-nav-link active" data-section="home">Home</a>
+        <a href="#upload" class="mobile-nav-link" data-section="upload">Upload</a>
+        <a href="#live" class="mobile-nav-link" data-section="live">Live Detection</a>
+        <a href="#history" class="mobile-nav-link" data-section="history">History</a>
+    </div>
 
-    <section id="demoSection" class="demo-section" style="display: none;">
-        <div class="container">
-            <h2 class="section-title">Live Accident Detection</h2>
-            
-            <div class="mode-selector">
-                <button class="mode-btn active" onclick="setMode('camera')" id="cameraModeBtn">
-                    <i class="fas fa-camera"></i> Live Camera
-                </button>
-                <button class="mode-btn" onclick="setMode('upload')" id="uploadModeBtn">
-                    <i class="fas fa-upload"></i> Upload Video
-                </button>
-            </div>
-            
-            <div id="cameraMode">
-                <div class="demo-container">
-                    <div class="video-container">
-                        <video id="videoFeed" autoplay playsinline></video>
-                        <canvas id="heatmapCanvas"></canvas>
-                        <div class="detection-overlay" id="detectionOverlay" style="display: none;">
-                            <div class="alert-banner">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span id="alertMessage">Accident Detected!</span>
-                            </div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="section hero-section active">
+            <div class="hero-container">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>94.2% Accuracy | 1.3s Response Time</span>
+                </div>
+                <h1 class="hero-title">
+                    <span class="title-line">Intelligent</span>
+                    <span class="title-line highlight">Accident Detection</span>
+                    <span class="title-line">System</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Advanced AI-powered system for real-time accident detection, 
+                    severity classification, and emergency response automation.
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value">94.2%</span>
+                            <span class="stat-label">Detection Accuracy</span>
                         </div>
                     </div>
-                    <div class="detection-info">
-                        <div class="info-card">
-                            <h3><i class="fas fa-chart-simple"></i> Detection Status</h3>
-                            <div class="status-badge" id="detectionStatus">
-                                <span class="status-dot" style="background: #10b981;"></span>
-                                Monitoring
-                            </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
                         </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-gauge-high"></i> Confidence Score</h3>
-                            <div class="confidence-meter">
-                                <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
-                                <span class="confidence-text" id="confidenceText">0%</span>
-                            </div>
+                        <div class="stat-info">
+                            <span class="stat-value">1.3s</span>
+                            <span class="stat-label">Response Time</span>
                         </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-waveform"></i> Severity Level</h3>
-                            <div class="severity-indicator">
-                                <span class="severity-level" id="severityLevel">None</span>
-                            </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
                         </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-car"></i> Vehicles Detected</h3>
-                            <div class="vehicle-count" id="vehicleCount">0</div>
-                        </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-clock"></i> Response Time</h3>
-                            <div class="response-time" id="responseTime">0.00s</div>
+                        <div class="stat-info">
+                            <span class="stat-value">3</span>
+                            <span class="stat-label">Input Types</span>
                         </div>
                     </div>
                 </div>
-                <div class="control-bar">
-                    <button class="control-btn" onclick="stopDemo()">
-                        <i class="fas fa-stop"></i> Stop Detection
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="navigateTo('upload')">
+                        <i class="fas fa-rocket"></i>
+                        Start Detection
                     </button>
-                    <button class="control-btn" onclick="captureSnapshot()">
-                        <i class="fas fa-camera"></i> Capture Snapshot
+                    <button class="btn btn-secondary" onclick="navigateTo('live')">
+                        <i class="fas fa-play-circle"></i>
+                        Live Mode
                     </button>
                 </div>
-            </div>
-            
-            <div id="uploadMode" style="display: none;">
-                <div class="upload-area" onclick="document.getElementById('videoUpload').click()">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Click or drag to upload video file</p>
-                    <p style="font-size: 0.875rem;">Supports: MP4, AVI, MOV, MKV (Max 500MB)</p>
-                    <input type="file" id="videoUpload" class="file-input" accept="video/*" onchange="handleVideoUpload(event)">
-                </div>
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <p style="text-align: center; margin-top: 0.5rem; font-size: 0.875rem;" id="progressText">Processing video...</p>
-                </div>
-                <div class="demo-container" id="uploadVideoContainer" style="display: none;">
-                    <div class="video-container">
-                        <video id="uploadedVideo" controls></video>
-                        <canvas id="uploadHeatmapCanvas"></canvas>
-                        <div class="detection-overlay" id="uploadDetectionOverlay" style="display: none;">
-                            <div class="alert-banner">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span id="uploadAlertMessage">Accident Detected in Video!</span>
-                            </div>
+                <div class="hero-visual">
+                    <div class="visual-container">
+                        <div class="visual-ring ring-1"></div>
+                        <div class="visual-ring ring-2"></div>
+                        <div class="visual-ring ring-3"></div>
+                        <div class="visual-core">
+                            <i class="fas fa-eye"></i>
                         </div>
                     </div>
-                    <div class="detection-info">
-                        <div class="info-card">
-                            <h3><i class="fas fa-chart-simple"></i> Analysis Status</h3>
-                            <div class="status-badge" id="uploadStatus">Ready</div>
-                        </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-gauge-high"></i> Max Confidence</h3>
-                            <div class="confidence-meter">
-                                <div class="confidence-fill" id="uploadConfidenceFill" style="width: 0%"></div>
-                                <span class="confidence-text" id="uploadConfidenceText">0%</span>
-                            </div>
-                        </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-waveform"></i> Detected Severity</h3>
-                            <div class="severity-indicator">
-                                <span class="severity-level" id="uploadSeverity">None</span>
-                            </div>
-                        </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-car"></i> Max Vehicles</h3>
-                            <div class="vehicle-count" id="uploadVehicleCount">0</div>
-                        </div>
-                        <div class="info-card">
-                            <h3><i class="fas fa-clock"></i> Detection Time</h3>
-                            <div class="response-time" id="uploadResponseTime">0.00s</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control-bar" id="uploadControls" style="display: none;">
-                    <button class="control-btn" onclick="analyzeUploadedVideo()">
-                        <i class="fas fa-chart-line"></i> Analyze Video
-                    </button>
-                    <button class="control-btn" onclick="resetUpload()">
-                        <i class="fas fa-sync-alt"></i> Upload New Video
-                    </button>
-                    <button class="control-btn" onclick="downloadReport()">
-                        <i class="fas fa-download"></i> Download Report
-                    </button>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="dashboardSection" class="dashboard-section">
-        <div class="container">
-            <h2 class="section-title">Analytics Dashboard</h2>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <h4>Total Detections</h4>
-                    <div class="stat-number" id="totalDetections">0</div>
+        <!-- Upload Section -->
+        <section id="upload" class="section upload-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Upload & Detect</h2>
+                    <p class="section-subtitle">Upload images or videos for instant accident detection</p>
                 </div>
-                <div class="stat-box">
-                    <h4>Accidents Detected</h4>
-                    <div class="stat-number" id="accidentDetections">0</div>
+
+                <!-- Stats Dashboard -->
+                <div class="dashboard-stats">
+                    <div class="dashboard-card">
+                        <div class="card-icon teal">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-value" id="totalDetections">0</span>
+                            <span class="card-label">Total Detections</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-icon gold">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-value" id="accidentsDetected">0</span>
+                            <span class="card-label">Accidents Found</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-icon teal">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-value" id="safeDetections">0</span>
+                            <span class="card-label">Safe Detected</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-icon gold">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="card-content">
+                            <span class="card-value" id="avgConfidence">0%</span>
+                            <span class="card-label">Avg Confidence</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <h4>Average Confidence</h4>
-                    <div class="stat-number" id="avgConfidence">0%</div>
+
+                <!-- Upload Cards -->
+                <div class="upload-grid">
+                    <!-- Image Upload -->
+                    <div class="upload-card">
+                        <div class="upload-header">
+                            <div class="upload-icon">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <h3>Image Detection</h3>
+                            <p>Upload an image for instant analysis</p>
+                        </div>
+                        <div class="upload-area" id="imageDropZone">
+                            <input type="file" id="imageInput" accept="image/*" hidden>
+                            <div class="upload-placeholder" id="imagePlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Drag & drop or click to upload</span>
+                                <small>Supports: JPG, PNG, JPEG</small>
+                            </div>
+                            <div class="preview-container" id="imagePreview" style="display: none;">
+                                <img id="previewImage" alt="Preview">
+                                <button class="remove-btn" onclick="clearImagePreview()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary upload-btn" id="analyzeImageBtn" onclick="analyzeImage()">
+                            <i class="fas fa-search"></i>
+                            Analyze Image
+                        </button>
+                    </div>
+
+                    <!-- Video Upload -->
+                    <div class="upload-card">
+                        <div class="upload-header">
+                            <div class="upload-icon video">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <h3>Video Detection</h3>
+                            <p>Frame-by-frame accident analysis</p>
+                        </div>
+                        <div class="upload-area" id="videoDropZone">
+                            <input type="file" id="videoInput" accept="video/*" hidden>
+                            <div class="upload-placeholder" id="videoPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Drag & drop or click to upload</span>
+                                <small>Supports: MP4, AVI, MOV</small>
+                            </div>
+                            <div class="preview-container video-preview" id="videoPreview" style="display: none;">
+                                <video id="previewVideo" controls></video>
+                                <button class="remove-btn" onclick="clearVideoPreview()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary upload-btn" id="analyzeVideoBtn" onclick="analyzeVideo()">
+                            <i class="fas fa-search"></i>
+                            Analyze Video
+                        </button>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <h4>False Alarms</h4>
-                    <div class="stat-number" id="falseAlarms">0</div>
+
+                <!-- Results Panel -->
+                <div class="results-panel" id="resultsPanel" style="display: none;">
+                    <div class="results-header">
+                        <h3><i class="fas fa-chart-bar"></i> Detection Results</h3>
+                        <button class="btn btn-ghost" onclick="closeResults()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="results-content" id="resultsContent">
+                        <!-- Results will be inserted here -->
+                    </div>
                 </div>
             </div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <h4>Minor Accidents</h4>
-                    <div class="stat-number" id="minorCount">0</div>
+        </section>
+
+        <!-- Live Detection Section -->
+        <section id="live" class="section live-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Live Detection</h2>
+                    <p class="section-subtitle">Real-time accident detection using your camera</p>
                 </div>
-                <div class="stat-box">
-                    <h4>Major Accidents</h4>
-                    <div class="stat-number" id="majorCount">0</div>
-                </div>
-                <div class="stat-box">
-                    <h4>Critical Accidents</h4>
-                    <div class="stat-number" id="criticalCount">0</div>
-                </div>
-                <div class="stat-box">
-                    <h4>Recent (24h)</h4>
-                    <div class="stat-number" id="recentDetections">0</div>
+
+                <div class="live-container">
+                    <div class="camera-view">
+                        <div class="camera-header">
+                            <div class="camera-status">
+                                <span class="status-indicator-live" id="cameraStatus">
+                                    <span class="dot"></span>
+                                    <span class="text">Camera Off</span>
+                                </span>
+                            </div>
+                            <div class="camera-controls">
+                                <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
+                                    <i class="fas fa-video"></i>
+                                    Start Camera
+                                </button>
+                                <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" style="display: none;">
+                                    <i class="fas fa-stop"></i>
+                                    Stop Camera
+                                </button>
+                            </div>
+                        </div>
+                        <div class="video-container">
+                            <video id="webcamVideo" autoplay playsinline muted></video>
+                            <canvas id="overlayCanvas"></canvas>
+                            <div class="camera-overlay" id="cameraOverlay">
+                                <div class="overlay-content">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Click "Start Camera" to begin</span>
+                                </div>
+                            </div>
+                            <div class="detection-overlay" id="detectionOverlay" style="display: none;">
+                                <div class="detection-label" id="detectionLabel">
+                                    <span class="result-text">No Accident</span>
+                                    <span class="confidence-text">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="camera-footer">
+                            <div class="detection-stats-live">
+                                <div class="live-stat">
+                                    <span class="label">Status</span>
+                                    <span class="value" id="liveStatus">Inactive</span>
+                                </div>
+                                <div class="live-stat">
+                                    <span class="label">Confidence</span>
+                                    <span class="value" id="liveConfidence">--</span>
+                                </div>
+                                <div class="live-stat">
+                                    <span class="label">FPS</span>
+                                    <span class="value" id="liveFPS">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="chart-container">
-                <canvas id="detectionTrendChart" height="100"></canvas>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="section history-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Detection History</h2>
+                    <p class="section-subtitle">View all past detection records</p>
+                </div>
+
+                <div class="history-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="historySearch" placeholder="Search detections...">
+                    </div>
+                    <button class="btn btn-secondary" onclick="refreshHistory()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllHistory()">
+                        <i class="fas fa-trash"></i>
+                        Clear All
+                    </button>
+                </div>
+
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Result</th>
+                                <th>Confidence</th>
+                                <th>Input Type</th>
+                                <th>Severity</th>
+                                <th>Response Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- History data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="history-empty" id="historyEmpty" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Detection History</h3>
+                    <p>Start detecting to build your history</p>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be inserted here -->
+                </div>
             </div>
-            <div class="history-table">
-                <h3 style="margin-bottom: 1rem;">Recent Accident History</h3>
-                <table>
-                    <thead>
-                        <tr><th>Timestamp</th><th>Severity</th><th>Confidence</th><th>Vehicles</th><th>Location</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="historyTableBody">
-                        <tr><td colspan="6"><div class="spinner"></div></td></tr>
-                    </tbody>
-                </table>
+        </section>
+    </main>
+
+    <!-- Alert Modal -->
+    <div class="modal-overlay" id="alertModal">
+        <div class="modal alert-modal">
+            <div class="modal-header alert-header">
+                <div class="alert-icon pulse">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>ACCIDENT DETECTED!</h3>
             </div>
-            <div class="control-bar" style="margin-top: 2rem;">
-                <button class="control-btn" onclick="refreshDashboard()">
-                    <i class="fas fa-sync-alt"></i> Refresh Data
+            <div class="modal-body">
+                <div class="alert-info">
+                    <div class="info-row">
+                        <span class="label">Confidence:</span>
+                        <span class="value" id="alertConfidence">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Severity:</span>
+                        <span class="value" id="alertSeverity">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Time:</span>
+                        <span class="value" id="alertTime">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeAlertModal()">
+                    <i class="fas fa-check"></i>
+                    Acknowledge
                 </button>
-                <button class="control-btn" onclick="exportDashboardData()">
-                    <i class="fas fa-download"></i> Export Report
-                </button>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section id="featuresSection" class="features" style="display: none;">
-        <div class="container">
-            <h2 class="section-title">Key Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                    <h3>Real-Time Detection</h3>
-                    <p>Average response time of 1.3 seconds with 94.2% accuracy</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                    <h3>Severity Analysis</h3>
-                    <p>Classifies accidents as Minor, Major, or Critical</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-fire"></i></div>
-                    <h3>Impact Heatmap</h3>
-                    <p>Visualizes collision impact zones with color-coded intensity</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-bell"></i></div>
-                    <h3>Emergency Alerts</h3>
-                    <p>Automatic notification to emergency services</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
-                    <h3>Live Dashboard</h3>
-                    <p>Real-time statistics and system performance monitoring</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                    <h3>Video Upload</h3>
-                    <p>Upload and analyze pre-recorded videos</p>
-                </div>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <h3>Processing</h3>
+            <p id="loadingText">Analyzing content...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2024 AccidentGuard AI - Intelligent Multi-Feature Accident Detection System</p>
-        </div>
-    </footer>
+    <!-- Audio Elements -->
+    <audio id="alertSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAL4HF36tlGANAdKG+vI1oGAu/xM7aq2EYC7/EztqrYRgFB3h/rLWPh1sYBn+7ycm3j4sADwfV4+W/d1MAAPgmGgAAEBAAABgQAAAcEAAAIBAAACgQAAAwEAAAQhAAA" type="audio/wav">
+    </audio>
 
-    <script>
-        let videoStream = null;
-        let detectionInterval = null;
-        let detectionChart = null;
-        let isDemoRunning = false;
-        let currentMode = 'camera';
-        let uploadedVideoFile = null;
-        let analysisResults = [];
-
-        const mockHistory = [
-            { id: 1, timestamp: new Date().toISOString(), severity: 'Minor', confidence: 87, vehicles: 2, location: 'Main Street & 5th Ave' },
-            { id: 2, timestamp: new Date(Date.now() - 3600000).toISOString(), severity: 'Major', confidence: 94, vehicles: 3, location: 'Highway 101' },
-            { id: 3, timestamp: new Date(Date.now() - 7200000).toISOString(), severity: 'Critical', confidence: 98, vehicles: 4, location: 'Downtown' }
-        ];
-
-        function showSection(section) {
-            document.getElementById('homeSection').style.display = section === 'home' ? 'flex' : 'none';
-            document.getElementById('demoSection').style.display = section === 'demo' ? 'block' : 'none';
-            document.getElementById('dashboardSection').style.display = section === 'dashboard' ? 'block' : 'none';
-            document.getElementById('featuresSection').style.display = section === 'features' ? 'block' : 'none';
-            
-            ['navHome', 'navDemo', 'navDashboard', 'navFeatures'].forEach(id => {
-                document.getElementById(id).classList.remove('active');
-            });
-            document.getElementById(`nav${section.charAt(0).toUpperCase() + section.slice(1)}`).classList.add('active');
-            
-            if (section === 'dashboard') {
-                loadDashboardData();
-                initDashboardChart();
-            }
-        }
-
-        function setMode(mode) {
-            currentMode = mode;
-            
-            document.getElementById('cameraModeBtn').classList.toggle('active', mode === 'camera');
-            document.getElementById('uploadModeBtn').classList.toggle('active', mode === 'upload');
-            
-            document.getElementById('cameraMode').style.display = mode === 'camera' ? 'block' : 'none';
-            document.getElementById('uploadMode').style.display = mode === 'upload' ? 'block' : 'none';
-            
-            if (mode === 'camera' && !isDemoRunning) {
-                startLiveDemo();
-            } else if (mode === 'camera' && isDemoRunning) {
-                // Already running
-            } else if (mode === 'upload') {
-                if (isDemoRunning) {
-                    stopDemo();
-                }
-            }
-        }
-
-        function handleVideoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            if (!file.type.startsWith('video/')) {
-                showNotification('Please upload a valid video file', 'error');
-                return;
-            }
-            
-            if (file.size > 500 * 1024 * 1024) {
-                showNotification('File too large. Maximum size is 500MB', 'error');
-                return;
-            }
-            
-            uploadedVideoFile = file;
-            const videoURL = URL.createObjectURL(file);
-            const video = document.getElementById('uploadedVideo');
-            video.src = videoURL;
-            
-            document.getElementById('uploadVideoContainer').style.display = 'grid';
-            document.getElementById('uploadControls').style.display = 'flex';
-            document.getElementById('progressContainer').style.display = 'none';
-            
-            // Reset analysis results
-            analysisResults = [];
-            document.getElementById('uploadStatus').innerHTML = 'Ready';
-            document.getElementById('uploadStatus').style.background = 'rgba(16,185,129,0.2)';
-            document.getElementById('uploadConfidenceFill').style.width = '0%';
-            document.getElementById('uploadConfidenceText').textContent = '0%';
-            document.getElementById('uploadSeverity').textContent = 'None';
-            document.getElementById('uploadSeverity').className = 'severity-level';
-            document.getElementById('uploadVehicleCount').textContent = '0';
-            document.getElementById('uploadResponseTime').textContent = '0.00s';
-            
-            showNotification(`Video loaded: ${file.name}`, 'success');
-        }
-
-        async function analyzeUploadedVideo() {
-            if (!uploadedVideoFile) {
-                showNotification('Please upload a video first', 'error');
-                return;
-            }
-            
-            const progressContainer = document.getElementById('progressContainer');
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            
-            progressContainer.style.display = 'block';
-            progressFill.style.width = '0%';
-            
-            const video = document.getElementById('uploadedVideo');
-            const canvas = document.getElementById('uploadHeatmapCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            analysisResults = [];
-            
-            // Wait for video metadata
-            await new Promise(resolve => {
-                if (video.readyState >= 1) {
-                    resolve();
-                } else {
-                    video.addEventListener('loadedmetadata', resolve);
-                }
-            });
-            
-            let duration = video.duration || 30;
-            let analysisDuration = Math.min(duration, 60);
-            let frames = Math.floor(analysisDuration / 0.5);
-            
-            for (let i = 0; i <= frames; i++) {
-                const progress = (i / frames) * 100;
-                progressFill.style.width = `${progress}%`;
-                progressText.textContent = `Analyzing video... ${Math.round(progress)}%`;
-                
-                const timestamp = (i * 0.5);
-                if (timestamp <= analysisDuration) {
-                    video.currentTime = timestamp;
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    
-                    if (canvas.width !== video.videoWidth) {
-                        canvas.width = video.videoWidth || 640;
-                        canvas.height = video.videoHeight || 480;
-                    }
-                    
-                    if (video.videoWidth && video.videoHeight) {
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    }
-                    
-                    const random = Math.random();
-                    const isAccident = random > 0.85;
-                    
-                    if (isAccident) {
-                        const severityRand = Math.random();
-                        let severity = 'Minor';
-                        let confidence = 70 + Math.random() * 25;
-                        
-                        if (severityRand > 0.8) {
-                            severity = 'Critical';
-                            confidence = 90 + Math.random() * 9;
-                        } else if (severityRand > 0.5) {
-                            severity = 'Major';
-                            confidence = 80 + Math.random() * 15;
-                        }
-                        
-                        analysisResults.push({
-                            timestamp: timestamp,
-                            severity: severity,
-                            confidence: confidence,
-                            vehicleCount: Math.floor(Math.random() * 5) + 1
-                        });
-                        
-                        // Draw heatmap
-                        const imageData = ctx.createImageData(canvas.width, canvas.height);
-                        for (let j = 0; j < imageData.data.length; j += 4) {
-                            const intensity = Math.random();
-                            imageData.data[j] = Math.min(255, intensity * 255);
-                            imageData.data[j + 1] = Math.min(255, intensity * 100);
-                            imageData.data[j + 2] = Math.min(255, (1 - intensity) * 255);
-                            imageData.data[j + 3] = intensity * 150;
-                        }
-                        ctx.putImageData(imageData, 0, 0);
-                    }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 80));
-            }
-            
-            progressContainer.style.display = 'none';
-            
-            if (analysisResults.length > 0) {
-                const worstAccident = analysisResults.reduce((max, curr) => {
-                    const getWeight = (s) => s === 'Critical' ? 3 : s === 'Major' ? 2 : 1;
-                    return getWeight(curr.severity) > getWeight(max.severity) ? curr : max;
-                });
-                
-                document.getElementById('uploadStatus').innerHTML = '<span class="status-dot" style="background: #ef4444;"></span> Accident Detected!';
-                document.getElementById('uploadStatus').style.background = 'rgba(239,68,68,0.2)';
-                document.getElementById('uploadConfidenceFill').style.width = `${worstAccident.confidence}%`;
-                document.getElementById('uploadConfidenceText').textContent = `${Math.round(worstAccident.confidence)}%`;
-                document.getElementById('uploadSeverity').textContent = worstAccident.severity;
-                document.getElementById('uploadSeverity').className = `severity-level severity-${worstAccident.severity.toLowerCase()}`;
-                document.getElementById('uploadVehicleCount').textContent = worstAccident.vehicleCount;
-                document.getElementById('uploadResponseTime').textContent = `${worstAccident.timestamp.toFixed(1)}s`;
-                
-                const overlay = document.getElementById('uploadDetectionOverlay');
-                overlay.style.display = 'block';
-                document.getElementById('uploadAlertMessage').textContent = 
-                    `${worstAccident.severity.toUpperCase()} ACCIDENT DETECTED at ${worstAccident.timestamp.toFixed(1)}s!`;
-                
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                }, 8000);
-                
-                saveToHistory(worstAccident);
-                showNotification(`Analysis complete! ${analysisResults.length} incidents detected`, 'success');
-            } else {
-                document.getElementById('uploadStatus').innerHTML = 'No accidents detected';
-                document.getElementById('uploadStatus').style.background = 'rgba(16,185,129,0.2)';
-                showNotification('Analysis complete - No accidents detected', 'info');
-            }
-        }
-
-        function saveToHistory(accident) {
-            const newRecord = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                severity: accident.severity,
-                confidence: Math.round(accident.confidence),
-                vehicles: accident.vehicleCount,
-                location: 'Uploaded Video Analysis'
-            };
-            mockHistory.unshift(newRecord);
-            if (mockHistory.length > 50) mockHistory.pop();
-        }
-
-        function resetUpload() {
-            uploadedVideoFile = null;
-            document.getElementById('videoUpload').value = '';
-            document.getElementById('uploadVideoContainer').style.display = 'none';
-            document.getElementById('uploadControls').style.display = 'none';
-            document.getElementById('uploadStatus').innerHTML = 'Ready';
-            document.getElementById('uploadStatus').style.background = 'rgba(16,185,129,0.2)';
-            document.getElementById('uploadConfidenceFill').style.width = '0%';
-            document.getElementById('uploadConfidenceText').textContent = '0%';
-            document.getElementById('uploadSeverity').textContent = 'None';
-            document.getElementById('uploadSeverity').className = 'severity-level';
-            document.getElementById('uploadVehicleCount').textContent = '0';
-            document.getElementById('uploadResponseTime').textContent = '0.00s';
-            analysisResults = [];
-            showNotification('Reset complete. Upload a new video.', 'info');
-        }
-
-        function downloadReport() {
-            if (analysisResults.length === 0) {
-                showNotification('No analysis results to download', 'error');
-                return;
-            }
-            
-            const report = {
-                fileName: uploadedVideoFile?.name,
-                analysisDate: new Date().toISOString(),
-                totalIncidents: analysisResults.length,
-                incidents: analysisResults,
-                summary: {
-                    critical: analysisResults.filter(r => r.severity === 'Critical').length,
-                    major: analysisResults.filter(r => r.severity === 'Major').length,
-                    minor: analysisResults.filter(r => r.severity === 'Minor').length
-                }
-            };
-            
-            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `accident-analysis-report-${Date.now()}.json`;
-            link.click();
-            
-            showNotification('Report downloaded', 'success');
-        }
-
-        async function startLiveDemo() {
-            showSection('demo');
-            setMode('camera');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('videoFeed');
-                video.srcObject = stream;
-                videoStream = stream;
-                startFrameCapture();
-                isDemoRunning = true;
-                showNotification('Live detection started', 'success');
-            } catch (err) {
-                showNotification('Camera access required for accident detection', 'error');
-                useMockVideo();
-            }
-        }
-
-        function stopDemo() {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-            if (detectionInterval) {
-                clearInterval(detectionInterval);
-            }
-            isDemoRunning = false;
-            showNotification('Detection stopped', 'info');
-        }
-
-        function useMockVideo() {
-            const video = document.getElementById('videoFeed');
-            const canvas = document.createElement('canvas');
-            canvas.width = 640;
-            canvas.height = 480;
-            const ctx = canvas.getContext('2d');
-            
-            let frame = 0;
-            detectionInterval = setInterval(() => {
-                ctx.fillStyle = '#1a1f3e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#333';
-                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-                
-                const x = (frame % canvas.width);
-                ctx.fillStyle = '#ff4444';
-                ctx.fillRect(x, canvas.height - 80, 40, 20);
-                ctx.fillStyle = '#4444ff';
-                ctx.fillRect(canvas.width - x - 40, canvas.height - 80, 40, 20);
-                
-                frame += 5;
-                video.srcObject = canvas.captureStream();
-                simulateDetection();
-            }, 100);
-        }
-
-        function startFrameCapture() {
-            const video = document.getElementById('videoFeed');
-            const canvas = document.getElementById('heatmapCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            detectionInterval = setInterval(() => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    simulateDetection();
-                }
-            }, 500);
-        }
-
-        function simulateDetection() {
-            const random = Math.random();
-            const isAccident = random > 0.85;
-            
-            if (isAccident) {
-                const severityRand = Math.random();
-                let severityLevel = 'Minor';
-                let confidence = 70 + Math.random() * 25;
-                
-                if (severityRand > 0.8) {
-                    severityLevel = 'Critical';
-                    confidence = 90 + Math.random() * 9;
-                } else if (severityRand > 0.5) {
-                    severityLevel = 'Major';
-                    confidence = 80 + Math.random() * 15;
-                }
-                
-                updateDetectionUI({
-                    accident_detected: true,
-                    severity: severityLevel,
-                    confidence_score: confidence,
-                    vehicle_count: Math.floor(Math.random() * 5) + 1,
-                    response_time: (Math.random() * 1.5 + 0.5).toFixed(2)
-                });
-            } else {
-                updateDetectionUI({
-                    accident_detected: false,
-                    severity: 'None',
-                    confidence_score: Math.random() * 30,
-                    vehicle_count: Math.floor(Math.random() * 3),
-                    response_time: '0.00'
-                });
-            }
-        }
-
-        function updateDetectionUI(detection) {
-            const overlay = document.getElementById('detectionOverlay');
-            const alertMessage = document.getElementById('alertMessage');
-            
-            if (detection.accident_detected) {
-                overlay.style.display = 'block';
-                let message = '';
-                switch(detection.severity) {
-                    case 'Critical':
-                        message = '⚠️ CRITICAL ACCIDENT DETECTED! Emergency services notified!';
-                        document.getElementById('severityLevel').className = 'severity-level severity-critical';
-                        break;
-                    case 'Major':
-                        message = '🚨 MAJOR ACCIDENT DETECTED! Alerting authorities...';
-                        document.getElementById('severityLevel').className = 'severity-level severity-major';
-                        break;
-                    case 'Minor':
-                        message = '⚠️ Minor accident detected - Monitoring situation';
-                        document.getElementById('severityLevel').className = 'severity-level severity-minor';
-                        break;
-                }
-                alertMessage.textContent = message;
-                setTimeout(() => { overlay.style.display = 'none'; }, 8000);
-            } else {
-                overlay.style.display = 'none';
-                document.getElementById('severityLevel').className = 'severity-level';
-            }
-            
-            const confidence = detection.confidence_score || 0;
-            document.getElementById('confidenceFill').style.width = `${confidence}%`;
-            document.getElementById('confidenceText').textContent = `${Math.round(confidence)}%`;
-            document.getElementById('severityLevel').textContent = detection.severity || 'None';
-            document.getElementById('vehicleCount').textContent = detection.vehicle_count || 0;
-            document.getElementById('responseTime').textContent = `${detection.response_time || 0}s`;
-            
-            const statusBadge = document.getElementById('detectionStatus');
-            if (detection.accident_detected) {
-                statusBadge.innerHTML = '<span class="status-dot" style="background: #ef4444;"></span> Accident Detected!';
-                statusBadge.style.background = 'rgba(239,68,68,0.2)';
-                statusBadge.style.color = '#ef4444';
-            } else {
-                statusBadge.innerHTML = '<span class="status-dot" style="background: #10b981;"></span> Monitoring';
-                statusBadge.style.background = 'rgba(16,185,129,0.2)';
-                statusBadge.style.color = '#10b981';
-            }
-            
-            const canvas = document.getElementById('heatmapCanvas');
-            if (canvas.width && detection.accident_detected) {
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.createImageData(canvas.width, canvas.height);
-                for (let i = 0; i < imageData.data.length; i += 4) {
-                    const intensity = Math.random();
-                    imageData.data[i] = intensity * 255;
-                    imageData.data[i + 1] = intensity * 100;
-                    imageData.data[i + 2] = (1 - intensity) * 255;
-                    imageData.data[i + 3] = intensity * 100;
-                }
-                ctx.putImageData(imageData, 0, 0);
-                setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 2000);
-            }
-        }
-
-        function captureSnapshot() {
-            const video = document.getElementById('videoFeed');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const link = document.createElement('a');
-            link.download = `snapshot-${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            showNotification('Snapshot saved', 'success');
-        }
-
-        async function loadDashboardData() {
-            const stats = {
-                total_detections: 1247,
-                accident_detections: 342,
-                avg_confidence: 87.5,
-                false_alarms: 42,
-                severity_breakdown: { Minor: 189, Major: 112, Critical: 41 },
-                recent_detections: 23
-            };
-            updateDashboardStats(stats);
-            loadHistoryData();
-        }
-
-        function updateDashboardStats(stats) {
-            document.getElementById('totalDetections').textContent = stats.total_detections || 0;
-            document.getElementById('accidentDetections').textContent = stats.accident_detections || 0;
-            document.getElementById('avgConfidence').textContent = `${stats.avg_confidence || 0}%`;
-            document.getElementById('falseAlarms').textContent = stats.false_alarms || 0;
-            document.getElementById('minorCount').textContent = stats.severity_breakdown?.Minor || 0;
-            document.getElementById('majorCount').textContent = stats.severity_breakdown?.Major || 0;
-            document.getElementById('criticalCount').textContent = stats.severity_breakdown?.Critical || 0;
-            document.getElementById('recentDetections').textContent = stats.recent_detections || 0;
-        }
-
-        function loadHistoryData() {
-            displayHistory(mockHistory);
-        }
-
-        function displayHistory(history) {
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-            history.forEach(record => {
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${new Date(record.timestamp).toLocaleString()}</td>
-                    <td><span class="severity-badge severity-${record.severity.toLowerCase()}">${record.severity}</span></td>
-                    <td>${record.confidence}%</td>
-                    <td>${record.vehicles || 2}</td>
-                    <td>${record.location}</td>
-                    <td><button class="btn-view" onclick="viewDetails(${record.id})">View</button></td>
-                `;
-            });
-        }
-
-        function initDashboardChart() {
-            const ctx = document.getElementById('detectionTrendChart').getContext('2d');
-            if (detectionChart) detectionChart.destroy();
-            detectionChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
-                    datasets: [{
-                        label: 'Accident Detections per Hour',
-                        data: Array.from({length: 24}, () => Math.floor(Math.random() * 10)),
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99,102,241,0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { labels: { color: 'white' } } },
-                    scales: {
-                        y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } },
-                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } }
-                    }
-                }
-            });
-        }
-
-        function refreshDashboard() { loadDashboardData(); showNotification('Dashboard refreshed', 'success'); }
-        function exportDashboardData() {
-            const data = { exportDate: new Date().toISOString(), metrics: { total: document.getElementById('totalDetections').textContent } };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `report-${Date.now()}.json`;
-            link.click();
-            showNotification('Report exported', 'success');
-        }
-
-        function viewDetails(id) {
-            const record = mockHistory.find(r => r.id === id) || mockHistory[0];
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header"><h2>Accident Details</h2><button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button></div>
-                    <div class="modal-body">
-                        <p><strong>Time:</strong> ${new Date(record.timestamp).toLocaleString()}</p>
-                        <p><strong>Severity:</strong> <span class="severity-badge severity-${record.severity.toLowerCase()}">${record.severity}</span></p>
-                        <p><strong>Confidence:</strong> ${record.confidence}%</p>
-                        <p><strong>Vehicles:</strong> ${record.vehicles || 2}</p>
-                        <p><strong>Location:</strong> ${record.location}</p>
-                    </div>
-                    <div class="modal-footer"><button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${message}</span>`;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            showSection('home');
-        });
-
-        window.showSection = showSection;
-        window.startLiveDemo = startLiveDemo;
-        window.stopDemo = stopDemo;
-        window.captureSnapshot = captureSnapshot;
-        window.setMode = setMode;
-        window.handleVideoUpload = handleVideoUpload;
-        window.analyzeUploadedVideo = analyzeUploadedVideo;
-        window.resetUpload = resetUpload;
-        window.downloadReport = downloadReport;
-        window.refreshDashboard = refreshDashboard;
-        window.exportDashboardData = exportDashboardData;
-        window.viewDetails = viewDetails;
-    </script>
+    <script src="docs/script.js"></script>
 </body>
 </html>
