@@ -2,8 +2,8 @@
 // Configuration & State
 // ========================================
 const CONFIG = {
-    API_BASE: 'http://localhost:8000', // Set to Localhost for SPEED. Change to Render URL for Live Demo.
-    FRAME_INTERVAL: 500,
+    API_BASE: 'https://accident-detection-system07-3.onrender.com', // Your Live Backend
+    FRAME_INTERVAL: 500, // ms between frame captures for live cam
     ALERT_SOUND_ENABLED: true
 };
 
