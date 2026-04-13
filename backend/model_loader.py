@@ -4,7 +4,8 @@ import numpy as np
 from typing import Dict, Any
 from ultralytics import YOLO
 
-# Path to the smaller model
+# Path configuration
+# Note: This path goes UP from 'backend' folder, then into 'AccidentDetectionProject'
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
     "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "yolov8s.pt"
@@ -25,7 +26,6 @@ def load_model():
 
     try:
         print(f"Loading model from {MODEL_PATH}...")
-        # Load using Ultralytics
         _model = YOLO(MODEL_PATH)
         print("Model loaded successfully.")
         return _model
@@ -52,12 +52,14 @@ def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
                     
                     detected_objects.append(class_name)
                     
-                    # Check for vehicles
+                    # Check for vehicles (Car, Truck, Bus, Motorcycle)
                     if class_name in ["car", "truck", "bus", "motorcycle"]:
                         if conf > max_confidence:
                             max_confidence = conf
 
-        # If vehicle detected with high confidence, flag as accident for demo
+        # LOGIC:
+        # Since we are using a standard model (not custom trained on accidents),
+        # we simulate accident detection by checking if vehicles are detected with high confidence.
         if max_confidence > 0.5:
             return {
                 "result": "Accident",
