@@ -1,10 +1,9 @@
-
 // ========================================
 // Configuration & State
 // ========================================
 const CONFIG = {
-    API_BASE: 'https://accident-detection-system07-3.onrender.com', 
-    FRAME_INTERVAL: 500, 
+    API_BASE: 'https://accident-detection-system07-3.onrender.com', // Your Live Backend
+    FRAME_INTERVAL: 500, // ms between frame captures for live cam
     ALERT_SOUND_ENABLED: true
 };
 
@@ -527,6 +526,7 @@ async function loadHistory() {
             elements.historyEmpty.style.display = 'none';
         } else {
             elements.historyEmpty.style.display = 'block';
+            elements.historyTableBody.innerHTML = '';
         }
     } catch (error) {
         console.error('Error loading history:', error);
