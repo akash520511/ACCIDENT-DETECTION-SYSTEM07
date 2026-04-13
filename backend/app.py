@@ -29,7 +29,9 @@ app.add_middleware(
 )
 
 # Create directories for saved frames
-SAVED_FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "saved_frames")
+# Using absolute path helps avoid confusion on Render
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SAVED_FRAMES_DIR = os.path.join(BASE_DIR, "saved_frames")
 os.makedirs(SAVED_FRAMES_DIR, exist_ok=True)
 
 # Mount static files
@@ -48,7 +50,10 @@ async def startup_event():
     database.init_database()
     print("System ready!")
 
-@app.get("/")
+# ==================== HEALTH CHECK ====================
+
+# FIX: Use api_route to allow both GET (browser) and HEAD (Render health check)
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     """Health check endpoint"""
     return {
@@ -68,15 +73,19 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+# ==================== IMAGE PREDICTION ====================
+
 @app.post("/predict-image")
 async def predict_image(file: UploadFile = File(...)):
     """Process uploaded image for accident detection"""
     start_time = time.time()
     
     try:
+        # Validate file type
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="File must be an image")
         
+        # Read image
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -84,9 +93,13 @@ async def predict_image(file: UploadFile = File(...)):
         if image is None:
             raise HTTPException(status_code=400, detail="Could not decode image")
         
+        # Get prediction
         prediction = predict_single_frame(model, image)
+        
+        # Calculate response time
         response_time = time.time() - start_time
         
+        # Save accident frame if detected
         saved_path = None
         if prediction["result"] == "Accident":
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -94,6 +107,7 @@ async def predict_image(file: UploadFile = File(...)):
             saved_path = os.path.join(SAVED_FRAMES_DIR, filename)
             cv2.imwrite(saved_path, image)
         
+        # Store in database
         database.insert_detection(
             result=prediction["result"],
             confidence=prediction["confidence"],
@@ -118,28 +132,35 @@ async def predict_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
+# ==================== VIDEO PREDICTION ====================
+
 @app.post("/predict-video")
 async def predict_video(file: UploadFile = File(...)):
     """Process uploaded video for accident detection frame-by-frame"""
     start_time = time.time()
     
     try:
+        # Validate file type
         if not file.content_type.startswith('video/'):
             raise HTTPException(status_code=400, detail="File must be a video")
         
+        # Save uploaded video temporarily
         temp_video_path = os.path.join(SAVED_FRAMES_DIR, f"temp_{file.filename}")
         contents = await file.read()
         with open(temp_video_path, 'wb') as f:
             f.write(contents)
         
+        # Open video
         cap = cv2.VideoCapture(temp_video_path)
         
         if not cap.isOpened():
             raise HTTPException(status_code=400, detail="Could not open video file")
         
+        # Get video properties
         fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        frame_interval = max(1, fps // 5)
+        # Process fewer frames to speed up analysis on server
+        frame_interval = max(1, fps // 2)  # Process 2 frames per second
         
         accident_frames = []
         accident_count = 0
@@ -151,6 +172,7 @@ async def predict_video(file: UploadFile = File(...)):
             if not ret:
                 break
             
+            # Process every Nth frame for efficiency
             if frame_count % frame_interval == 0:
                 prediction = predict_single_frame(model, frame)
                 confidences.append(prediction["confidence"])
@@ -159,6 +181,7 @@ async def predict_video(file: UploadFile = File(...)):
                     accident_count += 1
                     timestamp = frame_count / fps
                     
+                    # Save accident frame
                     accident_filename = f"accident_vid_{datetime.now().strftime('%Y%m%d_%H%M%S')}_frame_{frame_count}.jpg"
                     accident_path = os.path.join(SAVED_FRAMES_DIR, accident_filename)
                     cv2.imwrite(accident_path, frame)
@@ -174,11 +197,13 @@ async def predict_video(file: UploadFile = File(...)):
         
         cap.release()
         
+        # Clean up temp file
         try:
             os.remove(temp_video_path)
         except:
             pass
         
+        # Calculate overall result
         total_processed = frame_count // frame_interval
         accident_ratio = accident_count / max(total_processed, 1)
         avg_confidence = sum(confidences) / max(len(confidences), 1)
@@ -188,6 +213,7 @@ async def predict_video(file: UploadFile = File(...)):
         
         response_time = time.time() - start_time
         
+        # Store in database
         database.insert_detection(
             result=overall_result,
             confidence=overall_confidence,
@@ -218,60 +244,85 @@ async def predict_video(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Video processing error: {str(e)}")
 
+# ==================== HISTORY ENDPOINTS ====================
+
 @app.get("/history")
 async def get_history(limit: int = 50):
+    """Get detection history"""
     try:
         history = database.get_all_detections(limit)
-        return {"success": True, "count": len(history), "history": history}
+        return {
+            "success": True,
+            "count": len(history),
+            "history": history
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.get("/stats")
 async def get_stats():
+    """Get detection statistics"""
     try:
         stats = database.get_detection_stats()
-        return {"success": True, "stats": stats}
+        return {
+            "success": True,
+            "stats": stats
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.delete("/history")
 async def clear_history():
+    """Clear all detection history"""
     try:
         database.clear_history()
         return {"success": True, "message": "History cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+# ==================== WEBSOCKET FOR LIVE DETECTION ====================
+
 @app.websocket("/ws/live-detection")
 async def websocket_live_detection(websocket: WebSocket):
+    """WebSocket endpoint for real-time detection"""
     await websocket.accept()
     global detection_active
     detection_active = True
     
     try:
         while detection_active:
+            # Receive frame data
             data = await websocket.receive_bytes()
+            
+            # Decode image
             nparr = np.frombuffer(data, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
             if frame is not None:
+                # Get prediction
                 prediction = predict_single_frame(model, frame)
+                
+                # Send result back
                 await websocket.send_json({
                     "result": prediction["result"],
                     "confidence": round(prediction["confidence"], 2),
                     "timestamp": datetime.now().isoformat()
                 })
                 
+                # Save accident frame
                 if prediction["result"] == "Accident":
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     filename = f"live_accident_{timestamp}.jpg"
                     cv2.imwrite(os.path.join(SAVED_FRAMES_DIR, filename), frame)
+                    
+                    # Store in database
                     database.insert_detection(
                         result=prediction["result"],
                         confidence=prediction["confidence"],
                         input_type="live",
                         severity="Detected"
                     )
+                    
     except WebSocketDisconnect:
         print("WebSocket disconnected")
     except Exception as e:
@@ -279,5 +330,13 @@ async def websocket_live_detection(websocket: WebSocket):
     finally:
         detection_active = False
 
+# ==================== START SERVER ====================
+
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8000)
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
