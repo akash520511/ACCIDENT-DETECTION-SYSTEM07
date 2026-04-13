@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-# CORRECTED IMPORTS: Use relative imports (.) because files are in the same 'backend' folder
+# Import custom modules (Relative imports for Render deployment)
 from .model_loader import load_model, predict_single_frame
 from . import database
 
@@ -146,7 +146,10 @@ async def predict_video(file: UploadFile = File(...)):
         
         fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        frame_interval = max(1, fps // 2)
+        
+        # OPTIMIZATION: Process 1 frame per second (fps) instead of 2 (fps // 2)
+        # This makes the cloud processing 2x faster.
+        frame_interval = fps 
         
         accident_frames = []
         accident_count = 0
@@ -290,5 +293,6 @@ async def websocket_live_detection(websocket: WebSocket):
     finally:
         detection_active = False
 
+# This block is for local running only.
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
