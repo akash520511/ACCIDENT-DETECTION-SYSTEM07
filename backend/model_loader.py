@@ -8,7 +8,7 @@ from ultralytics import YOLO
 # Note: This path goes UP from 'backend' folder, then into 'AccidentDetectionProject'
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
-    "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "yolov8s.pt"
+    "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "yolov8n.pt"
 )
 
 _model = None
