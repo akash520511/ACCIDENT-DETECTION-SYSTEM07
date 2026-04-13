@@ -1,7 +1,7 @@
 
 const CONFIG = {
 
-    API_BASE: 'http://localhost:8000' 
+    API_BASE: 'http://localhost:8000',
     FRAME_INTERVAL: 500, // ms between frame captures for live cam
     ALERT_SOUND_ENABLED: true
 };
