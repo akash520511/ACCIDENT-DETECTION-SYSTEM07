@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, Any
 from ultralytics import YOLO
 
-# UPDATED: Using 'yolov8s.pt' for best balance of accuracy and speed
+# Path to the smaller model
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
     "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "yolov8s.pt"
@@ -25,6 +25,7 @@ def load_model():
 
     try:
         print(f"Loading model from {MODEL_PATH}...")
+        # Load using Ultralytics
         _model = YOLO(MODEL_PATH)
         print("Model loaded successfully.")
         return _model
@@ -34,44 +35,45 @@ def load_model():
 
 def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
     try:
+        # Run inference
         results = model.predict(source=image, verbose=False, conf=0.25)
         
-        # Default status
-        result_status = "No Accident"
+        detected_objects = []
         max_confidence = 0.0
         
         if results and len(results) > 0:
             result = results[0]
             
             if result.boxes is not None and len(result.boxes) > 0:
-                # Iterate through all detected objects
                 for box in result.boxes:
                     conf = float(box.conf[0])
                     cls_id = int(box.cls[0])
-                    class_name = model.names.get(cls_id, "").lower()
+                    class_name = model.names.get(cls_id, "unknown")
                     
-                    # LOGIC FOR STANDARD YOLO:
-                    # Standard models detect cars/trucks. They do not detect "accidents".
-                    # For this demo, we will assume high confidence detection of vehicles 
-                    # implies activity, but strictly speaking, without a custom trained 
-                    # 'accident' model, this detects OBJECTS.
+                    detected_objects.append(class_name)
                     
-                    # If you trained a custom model, replace 'car' with 'accident'
-                    if class_name in ["car", "truck", "bus", "accident"]: 
-                         if conf > max_confidence:
+                    # Check for vehicles
+                    if class_name in ["car", "truck", "bus", "motorcycle"]:
+                        if conf > max_confidence:
                             max_confidence = conf
-                         result_status = "Detected Object" 
 
-                # For the purpose of your project demo, let's assume:
-                # If confidence is high, we flag it.
-                if max_confidence > 0.5:
-                    return {"result": "Accident", "confidence": max_confidence * 100}
-        
-        return {"result": "No Accident", "confidence": max_confidence * 100}
+        # If vehicle detected with high confidence, flag as accident for demo
+        if max_confidence > 0.5:
+            return {
+                "result": "Accident",
+                "confidence": max_confidence * 100,
+                "raw_prediction": list(set(detected_objects))
+            }
+        else:
+            return {
+                "result": "No Accident",
+                "confidence": max_confidence * 100,
+                "raw_prediction": []
+            }
 
     except Exception as e:
         print(f"Prediction error: {e}")
-        return {"result": "Error", "confidence": 0.0}
+        return {"result": "Error", "confidence": 0.0, "error": str(e)}
 
 def get_model():
     global _model
