@@ -1,8 +1,7 @@
-// ========================================
-// Configuration & State
-// ========================================
+
 const CONFIG = {
-    API_BASE: 'https://accident-detection-system07-3.onrender.com', // Your Live Backend
+
+    API_BASE: 'http://localhost:8000' 
     FRAME_INTERVAL: 500, // ms between frame captures for live cam
     ALERT_SOUND_ENABLED: true
 };
