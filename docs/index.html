@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intelligent Accident Detection System</title>
+    <title>AccidentAI - Premium Detection System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,39 +22,24 @@
     <!-- Navigation -->
     <nav class="nav-container" id="navbar">
         <div class="nav-content">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
+            <a href="#home" class="logo">
+                <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
                 <span class="logo-text">AccidentAI</span>
-            </div>
+            </a>
             <div class="nav-links">
-                <a href="#home" class="nav-link active" data-section="home">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="#upload" class="nav-link" data-section="upload">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>Upload</span>
-                </a>
-                <a href="#live" class="nav-link" data-section="live">
-                    <i class="fas fa-video"></i>
-                    <span>Live Detection</span>
-                </a>
-                <a href="#history" class="nav-link" data-section="history">
-                    <i class="fas fa-history"></i>
-                    <span>History</span>
-                </a>
+                <a href="#home" class="nav-link active" data-section="home"><i class="fas fa-home"></i><span>Home</span></a>
+                <a href="#upload" class="nav-link" data-section="upload"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>
+                <a href="#live" class="nav-link" data-section="live"><i class="fas fa-video"></i><span>Live</span></a>
+                <a href="#history" class="nav-link" data-section="history"><i class="fas fa-history"></i><span>History</span></a>
             </div>
             <div class="nav-actions">
                 <div class="status-indicator">
                     <span class="status-dot"></span>
                     <span class="status-text">System Active</span>
                 </div>
+                <button class="btn btn-danger small" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-bars"></i>
-            </button>
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
         </div>
     </nav>
 
@@ -63,8 +47,9 @@
     <div class="mobile-menu" id="mobileMenu">
         <a href="#home" class="mobile-nav-link active" data-section="home">Home</a>
         <a href="#upload" class="mobile-nav-link" data-section="upload">Upload</a>
-        <a href="#live" class="mobile-nav-link" data-section="live">Live Detection</a>
+        <a href="#live" class="mobile-nav-link" data-section="live">Live</a>
         <a href="#history" class="mobile-nav-link" data-section="history">History</a>
+        <a href="#" class="mobile-nav-link" onclick="logout()">Logout</a>
     </div>
 
     <!-- Main Content -->
@@ -81,58 +66,26 @@
                     <span class="title-line highlight">Accident Detection</span>
                     <span class="title-line">System</span>
                 </h1>
-                <p class="hero-subtitle">
-                    Advanced AI-powered system for real-time accident detection, 
-                    severity classification, and emergency response automation.
-                </p>
+                <p class="hero-subtitle">Advanced AI-powered system for real-time accident detection, severity classification, and emergency response automation.</p>
                 <div class="hero-stats">
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
+                        <div class="stat-icon"><i class="fas fa-brain"></i></div>
                         <div class="stat-info">
                             <span class="stat-value">94.2%</span>
                             <span class="stat-label">Detection Accuracy</span>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
                         <div class="stat-info">
                             <span class="stat-value">1.3s</span>
                             <span class="stat-label">Response Time</span>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value">3</span>
-                            <span class="stat-label">Input Types</span>
-                        </div>
-                    </div>
                 </div>
                 <div class="hero-actions">
-                    <button class="btn btn-primary" onclick="navigateTo('upload')">
-                        <i class="fas fa-rocket"></i>
-                        Start Detection
-                    </button>
-                    <button class="btn btn-secondary" onclick="navigateTo('live')">
-                        <i class="fas fa-play-circle"></i>
-                        Live Mode
-                    </button>
-                </div>
-                <div class="hero-visual">
-                    <div class="visual-container">
-                        <div class="visual-ring ring-1"></div>
-                        <div class="visual-ring ring-2"></div>
-                        <div class="visual-ring ring-3"></div>
-                        <div class="visual-core">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('upload')"><i class="fas fa-rocket"></i> Start Detection</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('live')"><i class="fas fa-play-circle"></i> Live Mode</button>
                 </div>
             </div>
         </section>
@@ -148,36 +101,28 @@
                 <!-- Stats Dashboard -->
                 <div class="dashboard-stats">
                     <div class="dashboard-card">
-                        <div class="card-icon teal">
-                            <i class="fas fa-tasks"></i>
-                        </div>
+                        <div class="card-icon teal"><i class="fas fa-tasks"></i></div>
                         <div class="card-content">
                             <span class="card-value" id="totalDetections">0</span>
                             <span class="card-label">Total Detections</span>
                         </div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-icon gold">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
+                        <div class="card-icon gold"><i class="fas fa-exclamation-triangle"></i></div>
                         <div class="card-content">
                             <span class="card-value" id="accidentsDetected">0</span>
                             <span class="card-label">Accidents Found</span>
                         </div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-icon teal">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+                        <div class="card-icon teal"><i class="fas fa-check-circle"></i></div>
                         <div class="card-content">
                             <span class="card-value" id="safeDetections">0</span>
                             <span class="card-label">Safe Detected</span>
                         </div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-icon gold">
-                            <i class="fas fa-percentage"></i>
-                        </div>
+                        <div class="card-icon gold"><i class="fas fa-percentage"></i></div>
                         <div class="card-content">
                             <span class="card-value" id="avgConfidence">0%</span>
                             <span class="card-label">Avg Confidence</span>
@@ -190,9 +135,7 @@
                     <!-- Image Upload -->
                     <div class="upload-card">
                         <div class="upload-header">
-                            <div class="upload-icon">
-                                <i class="fas fa-image"></i>
-                            </div>
+                            <div class="upload-icon"><i class="fas fa-image"></i></div>
                             <h3>Image Detection</h3>
                             <p>Upload an image for instant analysis</p>
                         </div>
@@ -205,23 +148,16 @@
                             </div>
                             <div class="preview-container" id="imagePreview" style="display: none;">
                                 <img id="previewImage" alt="Preview">
-                                <button class="remove-btn" onclick="clearImagePreview()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <button class="remove-btn" onclick="clearImagePreview()"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
-                        <button class="btn btn-primary upload-btn" id="analyzeImageBtn" onclick="analyzeImage()">
-                            <i class="fas fa-search"></i>
-                            Analyze Image
-                        </button>
+                        <button class="btn btn-primary upload-btn" onclick="analyzeImage()"><i class="fas fa-search"></i> Analyze Image</button>
                     </div>
 
                     <!-- Video Upload -->
                     <div class="upload-card">
                         <div class="upload-header">
-                            <div class="upload-icon video">
-                                <i class="fas fa-film"></i>
-                            </div>
+                            <div class="upload-icon video"><i class="fas fa-film"></i></div>
                             <h3>Video Detection</h3>
                             <p>Frame-by-frame accident analysis</p>
                         </div>
@@ -234,15 +170,10 @@
                             </div>
                             <div class="preview-container video-preview" id="videoPreview" style="display: none;">
                                 <video id="previewVideo" controls></video>
-                                <button class="remove-btn" onclick="clearVideoPreview()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <button class="remove-btn" onclick="clearVideoPreview()"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
-                        <button class="btn btn-primary upload-btn" id="analyzeVideoBtn" onclick="analyzeVideo()">
-                            <i class="fas fa-search"></i>
-                            Analyze Video
-                        </button>
+                        <button class="btn btn-primary upload-btn" onclick="analyzeVideo()"><i class="fas fa-search"></i> Analyze Video</button>
                     </div>
                 </div>
 
@@ -250,13 +181,9 @@
                 <div class="results-panel" id="resultsPanel" style="display: none;">
                     <div class="results-header">
                         <h3><i class="fas fa-chart-bar"></i> Detection Results</h3>
-                        <button class="btn btn-ghost" onclick="closeResults()">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <button class="btn btn-ghost" onclick="closeResults()"><i class="fas fa-times"></i></button>
                     </div>
-                    <div class="results-content" id="resultsContent">
-                        <!-- Results will be inserted here -->
-                    </div>
+                    <div class="results-content" id="resultsContent"></div>
                 </div>
             </div>
         </section>
@@ -279,14 +206,8 @@
                                 </span>
                             </div>
                             <div class="camera-controls">
-                                <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
-                                    <i class="fas fa-video"></i>
-                                    Start Camera
-                                </button>
-                                <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" style="display: none;">
-                                    <i class="fas fa-stop"></i>
-                                    Stop Camera
-                                </button>
+                                <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()"><i class="fas fa-video"></i> Start Camera</button>
+                                <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" style="display: none;"><i class="fas fa-stop"></i> Stop Camera</button>
                             </div>
                         </div>
                         <div class="video-container">
@@ -339,14 +260,8 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="historySearch" placeholder="Search detections...">
                     </div>
-                    <button class="btn btn-secondary" onclick="refreshHistory()">
-                        <i class="fas fa-sync-alt"></i>
-                        Refresh
-                    </button>
-                    <button class="btn btn-danger" onclick="clearAllHistory()">
-                        <i class="fas fa-trash"></i>
-                        Clear All
-                    </button>
+                    <button class="btn btn-secondary" onclick="refreshHistory()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button class="btn btn-danger" onclick="clearAllHistory()"><i class="fas fa-trash"></i> Clear All</button>
                 </div>
 
                 <div class="history-table-container">
@@ -354,11 +269,12 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Timestamp</th>
+                                <th>India Timestamp</th>
+                                <th>Camera ID / Location</th>
                                 <th>Result</th>
                                 <th>Confidence</th>
-                                <th>Input Type</th>
                                 <th>Severity</th>
+                                <th>Status</th>
                                 <th>Response Time</th>
                             </tr>
                         </thead>
@@ -373,10 +289,6 @@
                     <h3>No Detection History</h3>
                     <p>Start detecting to build your history</p>
                 </div>
-
-                <div class="pagination" id="pagination">
-                    <!-- Pagination will be inserted here -->
-                </div>
             </div>
         </section>
     </main>
@@ -385,9 +297,7 @@
     <div class="modal-overlay" id="alertModal">
         <div class="modal alert-modal">
             <div class="modal-header alert-header">
-                <div class="alert-icon pulse">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
+                <div class="alert-icon pulse"><i class="fas fa-exclamation-triangle"></i></div>
                 <h3>ACCIDENT DETECTED!</h3>
             </div>
             <div class="modal-body">
@@ -407,10 +317,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" onclick="closeAlertModal()">
-                    <i class="fas fa-check"></i>
-                    Acknowledge
-                </button>
+                <button class="btn btn-danger" onclick="closeAlertModal()"><i class="fas fa-check"></i> Acknowledge</button>
             </div>
         </div>
     </div>
@@ -418,14 +325,10 @@
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-            </div>
+            <div class="loading-spinner"><div class="spinner"></div></div>
             <h3>Processing</h3>
             <p id="loadingText">Analyzing content...</p>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
         </div>
     </div>
 
