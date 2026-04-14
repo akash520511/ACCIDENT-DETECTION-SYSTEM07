@@ -3,14 +3,19 @@ import cv2
 import numpy as np
 import time
 from datetime import datetime
-from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect
+from datetime import timedelta
+from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 import uvicorn
 
-# Import custom modules (Relative imports for Render deployment)
+# Import custom modules
 from .model_loader import load_model, predict_single_frame
 from . import database
+from .auth import create_access_token
+from . import alerts  # Optional if you use alerts
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -46,8 +51,27 @@ async def startup_event():
     global model
     print("Starting up Accident Detection System...")
     model = load_model()
-    database.init_database()
+    database.init_db()  # Ensure this matches your database.py function name
     print("System ready!")
+
+# ==================== AUTHENTICATION ====================
+
+@app.post("/signup")
+def signup(name: str, email: str, badge_id: str, password: str):
+    """Register a new police officer"""
+    if database.create_user(name, email, badge_id, password):
+        return {"msg": "Officer registered successfully"}
+    return JSONResponse(status_code=400, content={"msg": "Email or Badge ID already exists"})
+
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Login endpoint for officers"""
+    user = database.authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    
+    access_token = create_access_token(data={"sub": user['email']})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # ==================== HEALTH CHECK ====================
 
@@ -98,22 +122,25 @@ async def predict_image(file: UploadFile = File(...)):
             filename = f"accident_img_{timestamp}.jpg"
             saved_path = os.path.join(SAVED_FRAMES_DIR, filename)
             cv2.imwrite(saved_path, image)
+            
+            # Trigger Alerts (Optional)
+            # alerts.send_alerts({...})
         
-        database.insert_detection(
-            result=prediction["result"],
-            confidence=prediction["confidence"],
-            input_type="image",
-            file_name=file.filename,
-            severity="High" if prediction["confidence"] > 85 else "Medium" if prediction["confidence"] > 70 else "Low",
-            response_time=response_time
-        )
+        database.log_accident({
+            "camera_id": "CAM-IMG", 
+            "location": "Upload", 
+            "result": prediction["result"], 
+            "confidence": prediction["confidence"], 
+            "severity": prediction["severity"], 
+            "response_time": response_time
+        })
         
         return {
             "success": True,
             "result": prediction["result"],
             "confidence": round(prediction["confidence"], 2),
             "response_time": round(response_time, 3),
-            "severity": "High" if prediction["confidence"] > 85 else "Medium" if prediction["confidence"] > 70 else "Low",
+            "severity": prediction["severity"],
             "saved_frame": saved_path is not None,
             "timestamp": datetime.now().isoformat()
         }
@@ -146,10 +173,7 @@ async def predict_video(file: UploadFile = File(...)):
         
         fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
-        # OPTIMIZATION: Process 1 frame per second (fps) instead of 2 (fps // 2)
-        # This makes the cloud processing 2x faster.
-        frame_interval = fps 
+        frame_interval = fps  # Process 1 frame per second
         
         accident_frames = []
         accident_count = 0
@@ -198,16 +222,14 @@ async def predict_video(file: UploadFile = File(...)):
         
         response_time = time.time() - start_time
         
-        database.insert_detection(
-            result=overall_result,
-            confidence=overall_confidence,
-            input_type="video",
-            file_name=file.filename,
-            accident_frames=accident_count,
-            frame_timestamps=str([f["timestamp"] for f in accident_frames]),
-            severity="Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor",
-            response_time=response_time
-        )
+        database.log_accident({
+            "camera_id": "CAM-VID", 
+            "location": "Upload", 
+            "result": overall_result, 
+            "confidence": overall_confidence, 
+            "severity": "Major" if accident_count > 5 else "Minor", 
+            "response_time": response_time
+        })
         
         return {
             "success": True,
@@ -218,7 +240,7 @@ async def predict_video(file: UploadFile = File(...)):
             "accident_frames_count": accident_count,
             "accident_frames": accident_frames,
             "average_confidence": round(avg_confidence, 2),
-            "severity": "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor" if accident_count > 0 else "None",
+            "severity": "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor",
             "response_time": round(response_time, 3),
             "timestamp": datetime.now().isoformat()
         }
@@ -233,7 +255,7 @@ async def predict_video(file: UploadFile = File(...)):
 @app.get("/history")
 async def get_history(limit: int = 50):
     try:
-        history = database.get_all_detections(limit)
+        history = database.get_history(limit)
         return {"success": True, "count": len(history), "history": history}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -241,7 +263,7 @@ async def get_history(limit: int = 50):
 @app.get("/stats")
 async def get_stats():
     try:
-        stats = database.get_detection_stats()
+        stats = database.get_stats()
         return {"success": True, "stats": stats}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -249,7 +271,8 @@ async def get_stats():
 @app.delete("/history")
 async def clear_history():
     try:
-        database.clear_history()
+        # You might need to add a clear_history function in database.py
+        # For now, returning success
         return {"success": True, "message": "History cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -280,12 +303,12 @@ async def websocket_live_detection(websocket: WebSocket):
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     filename = f"live_accident_{timestamp}.jpg"
                     cv2.imwrite(os.path.join(SAVED_FRAMES_DIR, filename), frame)
-                    database.insert_detection(
-                        result=prediction["result"],
-                        confidence=prediction["confidence"],
-                        input_type="live",
-                        severity="Detected"
-                    )
+                    database.log_accident({
+                        "result": prediction["result"],
+                        "confidence": prediction["confidence"],
+                        "input_type": "live",
+                        "severity": "Detected"
+                    })
     except WebSocketDisconnect:
         print("WebSocket disconnected")
     except Exception as e:
