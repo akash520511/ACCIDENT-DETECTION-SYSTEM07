@@ -42,6 +42,7 @@ def init_db():
             confidence REAL,
             severity TEXT,
             response_time REAL,
+            status TEXT DEFAULT 'Detected',
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -87,10 +88,11 @@ def log_accident(data: dict):
     cursor = conn.cursor()
     cursor.execute(
         """INSERT INTO detections 
-           (camera_id, location, result, confidence, severity, response_time) 
-           VALUES (?, ?, ?, ?, ?, ?)""",
+           (camera_id, location, result, confidence, severity, response_time, status) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
         (data.get('camera_id'), data.get('location'), data.get('result'), 
-         data.get('confidence'), data.get('severity'), data.get('response_time'))
+         data.get('confidence'), data.get('severity'), data.get('response_time'),
+         data.get('status', 'Detected'))
     )
     conn.commit()
     conn.close()
@@ -122,3 +124,16 @@ def get_stats():
         "safe_detections": safe,
         "average_confidence": round(avg_conf, 2)
     }
+
+def clear_history():
+    """Deletes all detection records"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM detections")
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error clearing history: {e}")
+        return False
