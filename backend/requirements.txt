@@ -1,7 +1,7 @@
-# Web Framework
-fastapi==0.104.1
+# Web Framework (Pinned for compatibility)
+fastapi==0.111.0
 uvicorn==0.24.0
-python-multipart==0.0.6
+python-multipart==0.0.9
 aiofiles==23.2.1
 
 # Data & AI
@@ -17,11 +17,12 @@ torch==2.2.0
 torchvision==0.17.0
 ultralytics==8.2.0
 
-# Authentication (CRITICAL - DO NOT SKIP)
+# Authentication
 passlib==1.7.4
 bcrypt==4.1.2
 python-jose==3.3.0
-cryptography==41.0.7
+pydantic==2.7.1
+email-validator==2.1.0
 
 # Alerts
 twilio
