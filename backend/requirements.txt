@@ -1,7 +1,6 @@
-# Web Framework (FIXED VERSIONS)
+# Web Framework
 fastapi==0.111.0
 pydantic==2.7.1
-pydantic-core==2.18.4
 starlette==0.37.2
 uvicorn[standard]==0.24.0
 python-multipart==0.0.9
