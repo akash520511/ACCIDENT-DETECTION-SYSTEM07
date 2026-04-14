@@ -148,14 +148,15 @@ ZONE_MAPPING = {
 }
 
 # Vehicle Registration Database (for family notification)
-# In production, this would come from your database
 VEHICLE_REGISTRATION_DB = {
     "MH01AB1234": {
         "owner_name": "Rajesh Sharma",
         "owner_phone": "+919876543220",
         "owner_email": "rajesh.sharma@email.com",
         "relation": "Self",
-        "alternative_contact": "+919876543221",
+        "emergency_contact_name": "Meera Sharma",
+        "emergency_contact_phone": "+919876543221",
+        "emergency_contact_relation": "Spouse",
         "address": "Andheri East, Mumbai"
     },
     "DL02CD5678": {
@@ -163,7 +164,9 @@ VEHICLE_REGISTRATION_DB = {
         "owner_phone": "+919876543222",
         "owner_email": "priya.patel@email.com",
         "relation": "Self",
-        "alternative_contact": "+919876543223",
+        "emergency_contact_name": "Raj Patel",
+        "emergency_contact_phone": "+919876543223",
+        "emergency_contact_relation": "Husband",
         "address": "Connaught Place, Delhi"
     },
     "KA03EF9012": {
@@ -178,7 +181,6 @@ VEHICLE_REGISTRATION_DB = {
     }
 }
 
-
 # ========================================
 # Helper Functions
 # ========================================
@@ -190,19 +192,19 @@ def get_zone_from_location(location):
             return value
     return "Central"
 
-
 def get_contacts_by_zone(zone, contact_type=None):
     """Get contacts filtered by zone and type"""
     all_contacts = []
     
     if contact_type in [None, "police"]:
-        all_contacts.extend([p for p in TRAFFIC_POLICE_CONTACTS if p["zone"] == zone and p["active"]])
+        police_in_zone = [p for p in TRAFFIC_POLICE_CONTACTS if p["zone"] == zone and p["active"]]
+        all_contacts.extend(police_in_zone)
     
     if contact_type in [None, "ambulance"]:
-        all_contacts.extend([a for a in AMBULANCE_CONTACTS if a["zone"] == zone and a["active"]])
+        ambulance_in_zone = [a for a in AMBULANCE_CONTACTS if a["zone"] == zone and a["active"]]
+        all_contacts.extend(ambulance_in_zone)
     
     return all_contacts
-
 
 def get_vehicle_owner_from_plate(license_plate):
     """Get vehicle owner details from license plate number"""
@@ -210,7 +212,6 @@ def get_vehicle_owner_from_plate(license_plate):
         return None
     plate_clean = license_plate.upper().replace(" ", "")
     return VEHICLE_REGISTRATION_DB.get(plate_clean, None)
-
 
 def get_family_members(owner_details):
     """Get family members/emergency contacts for the vehicle owner"""
@@ -238,18 +239,7 @@ def get_family_members(owner_details):
             "priority": 2
         })
     
-    # Add alternative contact
-    if owner_details.get("alternative_contact"):
-        family_members.append({
-            "name": "Alternative Contact",
-            "phone": owner_details.get("alternative_contact"),
-            "email": None,
-            "relation": "Family",
-            "priority": 3
-        })
-    
     return family_members
-
 
 # ========================================
 # SMS Function (Twilio)
@@ -273,15 +263,15 @@ def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
         # Add prefix based on recipient type
         prefix = ""
         if recipient_type == "police":
-            prefix = f"🚔 To: Officer {recipient_name}\n"
+            prefix = f"🚔 ALERT: Officer {recipient_name}\n\n"
         elif recipient_type == "ambulance":
-            prefix = f"🚑 To: {recipient_name}\n"
+            prefix = f"🚑 ALERT: {recipient_name}\n\n"
         elif recipient_type == "family":
-            prefix = f"👨‍👩‍👧 To: {recipient_name}\n"
+            prefix = f"👨‍👩‍👧 FAMILY ALERT: {recipient_name}\n\n"
         
         full_message = prefix + message
         
-        # Truncate to SMS length limit
+        # Truncate to SMS length limit (1600 chars is safe)
         if len(full_message) > 1600:
             full_message = full_message[:1597] + "..."
         
@@ -297,16 +287,18 @@ def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
         response = requests.post(url, data=data, auth=(TWILIO_SID, TWILIO_TOKEN), timeout=10)
         
         if response.status_code in [200, 201]:
-            logger.info(f"SMS sent to {recipient_type}: {recipient_name} at {phone_number}")
+            logger.info(f"✅ SMS sent to {recipient_type}: {recipient_name} at {phone_number}")
             return True, "SMS sent"
         else:
-            logger.error(f"Twilio error: {response.text}")
+            logger.error(f"❌ Twilio error: {response.status_code} - {response.text}")
             return False, f"Twilio error: {response.status_code}"
             
+    except requests.exceptions.Timeout:
+        logger.error("SMS timeout")
+        return False, "Timeout"
     except Exception as e:
         logger.error(f"SMS error: {str(e)}")
         return False, str(e)
-
 
 # ========================================
 # Email Function (SendGrid)
@@ -339,16 +331,15 @@ def send_email(email_address, subject, body_html, recipient_name=None, recipient
         response = requests.post(url, json=data, headers=headers, timeout=10)
         
         if response.status_code == 202:
-            logger.info(f"Email sent to {recipient_type}: {recipient_name} at {email_address}")
+            logger.info(f"✅ Email sent to {recipient_type}: {recipient_name} at {email_address}")
             return True, "Email sent"
         else:
-            logger.error(f"SendGrid error: {response.text}")
+            logger.error(f"❌ SendGrid error: {response.status_code} - {response.text}")
             return False, f"SendGrid error: {response.status_code}"
             
     except Exception as e:
         logger.error(f"Email error: {str(e)}")
         return False, str(e)
-
 
 # ========================================
 # Message Templates
@@ -361,69 +352,61 @@ def format_police_sms(alert_data):
     location = alert_data.get("location", "Unknown")
     camera_id = alert_data.get("camera_id", "Unknown")
     
-    return f"""🚨 ACCIDENT ALERT!
+    return f"""🚨 ACCIDENT DETECTED!
 
 Severity: {severity}
 Confidence: {confidence}%
 Location: {location}
 Camera: {camera_id}
+Time: {datetime.now().strftime('%H:%M:%S')}
 
-ACTION REQUIRED:
-- Dispatch patrol unit
-- Coordinate ambulance
-- Secure scene
-- Direct traffic
+ACTIONS REQUIRED:
+1. Dispatch patrol unit
+2. Coordinate ambulance
+3. Secure the scene
 
 Control Room: +919876543214"""
-
 
 def format_ambulance_sms(alert_data):
     """SMS for Ambulance Services"""
     severity = alert_data.get("severity", "Unknown")
     location = alert_data.get("location", "Unknown")
-    timestamp = alert_data.get("timestamp", datetime.now().strftime("%H:%M:%S"))
     
     return f"""🚑 MEDICAL EMERGENCY!
 
 Accident Reported
 Severity: {severity}
 Location: {location}
-Time: {timestamp}
+Time: {datetime.now().strftime('%H:%M:%S')}
 
-PATIENT INFO: Unknown - Prepare trauma team
-NEAREST HOSPITAL: Check dispatch
+ACTION: Dispatch nearest ambulance
+Prepare trauma team for {severity} severity
 
-Priority: URGENT
-Ambulance dispatched to: {location}"""
-
+Emergency: +919876543219"""
 
 def format_family_sms(alert_data, owner_details):
     """SMS for Family Members"""
     severity = alert_data.get("severity", "Unknown")
     location = alert_data.get("location", "Unknown")
-    timestamp = alert_data.get("timestamp", datetime.now().strftime("%H:%M:%S"))
     owner_name = owner_details.get("owner_name", "Your family member") if owner_details else "Your family member"
     
-    return f"""🚨 ACCIDENT ALERT - FAMILY NOTIFICATION
+    return f"""🚨 ACCIDENT ALERT
 
 Dear Family Member,
 
-An accident has been detected.
+An accident has been detected involving {owner_name}.
 
-Owner: {owner_name}
 Location: {location}
-Time: {timestamp}
 Severity: {severity}
+Time: {datetime.now().strftime('%H:%M:%S')}
 
-EMERGENCY RESPONSE:
+Emergency Response:
 ✓ Police dispatched
 ✓ Ambulance en route
-✓ Hospital on standby
 
 For updates: Police Control: +919876543214
 
 Stay calm. Help is on the way."""
-
 
 def format_police_email(alert_data):
     """Detailed Email for Police"""
@@ -433,65 +416,39 @@ def format_police_email(alert_data):
     camera_id = alert_data.get("camera_id", "Unknown")
     timestamp = alert_data.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
-    severity_colors = {
-        "Critical": "#FF0000",
-        "High": "#FF4444",
-        "Major": "#FF6666",
-        "Medium": "#FFA500",
-        "Minor": "#FFCC00",
-        "Low": "#00CC00"
-    }
-    color = severity_colors.get(severity, "#FF0000")
-    
     return f"""<!DOCTYPE html>
 <html>
-<head>
-    <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; }}
-        .container {{ max-width: 700px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f4f4f4; padding: 20px; border-radius: 0 0 10px 10px; }}
-        .alert-box {{ background: white; border-left: 4px solid {color}; padding: 15px; margin: 15px 0; border-radius: 5px; }}
-        .label {{ font-weight: bold; color: #333; width: 140px; display: inline-block; }}
-        .action-box {{ background: #e8f4f8; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-        .footer {{ margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; text-align: center; }}
-    </style>
-</head>
+<head><style>
+    body {{ font-family: Arial, sans-serif; }}
+    .container {{ max-width: 700px; margin: 0 auto; padding: 20px; }}
+    .header {{ background: #1a1a2e; color: white; padding: 20px; text-align: center; }}
+    .content {{ background: #f4f4f4; padding: 20px; }}
+    .alert-box {{ background: white; border-left: 4px solid #FF4444; padding: 15px; margin: 15px 0; }}
+    .label {{ font-weight: bold; width: 140px; display: inline-block; }}
+    .action-box {{ background: #e8f4f8; padding: 15px; margin: 15px 0; }}
+    .footer {{ text-align: center; font-size: 12px; margin-top: 20px; }}
+</style></head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>🚨 TRAFFIC POLICE ALERT</h2>
-            <p>Accident Detection System - Immediate Action Required</p>
-        </div>
+        <div class="header"><h2>🚨 TRAFFIC POLICE ALERT</h2><p>Immediate Action Required</p></div>
         <div class="content">
             <div class="alert-box">
-                <h3 style="color: {color};">⚠️ ACCIDENT DETECTED</h3>
-                <p><span class="label">Severity:</span> <strong style="color:{color};">{severity}</strong></p>
+                <h3 style="color:#FF4444;">⚠️ ACCIDENT DETECTED</h3>
+                <p><span class="label">Severity:</span> <strong>{severity}</strong></p>
                 <p><span class="label">Confidence:</span> {confidence}%</p>
                 <p><span class="label">Location:</span> {location}</p>
                 <p><span class="label">Camera ID:</span> {camera_id}</p>
                 <p><span class="label">Time:</span> {timestamp}</p>
             </div>
-            
             <div class="action-box">
-                <h4>📋 IMMEDIATE ACTIONS REQUIRED</h4>
-                <ul>
-                    <li>✓ Dispatch patrol unit to {location}</li>
-                    <li>✓ Coordinate with ambulance services</li>
-                    <li>✓ Secure accident scene and manage traffic</li>
-                    <li>✓ File incident report in system</li>
-                </ul>
+                <h4>📋 IMMEDIATE ACTIONS</h4>
+                <ul><li>Dispatch patrol unit to {location}</li><li>Coordinate with ambulance</li><li>Secure accident scene</li><li>File incident report</li></ul>
             </div>
-            
-            <div class="footer">
-                <p>This is an automated alert. Please acknowledge receipt.</p>
-                <p>🚔 Police Control Room: +919876543214 | 24x7</p>
-            </div>
+            <div class="footer"><p>🚔 Police Control Room: +919876543214 | 24x7</p><p>This is an automated alert.</p></div>
         </div>
     </div>
 </body>
 </html>"""
-
 
 def format_ambulance_email(alert_data):
     """Detailed Email for Ambulance"""
@@ -501,50 +458,33 @@ def format_ambulance_email(alert_data):
     
     return f"""<!DOCTYPE html>
 <html>
-<head>
-    <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; }}
-        .container {{ max-width: 700px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f4f4f4; padding: 20px; border-radius: 0 0 10px 10px; }}
-        .alert-box {{ background: white; border-left: 4px solid #e74c3c; padding: 15px; margin: 15px 0; border-radius: 5px; }}
-        .action-box {{ background: #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-        .footer {{ margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; text-align: center; }}
-    </style>
-</head>
+<head><style>
+    body {{ font-family: Arial, sans-serif; }}
+    .container {{ max-width: 700px; margin: 0 auto; padding: 20px; }}
+    .header {{ background: #c0392b; color: white; padding: 20px; text-align: center; }}
+    .content {{ background: #f4f4f4; padding: 20px; }}
+    .alert-box {{ background: white; border-left: 4px solid #e74c3c; padding: 15px; margin: 15px 0; }}
+    .action-box {{ background: #ffeaa7; padding: 15px; margin: 15px 0; }}
+</style></head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>🚑 MEDICAL EMERGENCY</h2>
-            <p>Accident Alert - Immediate Dispatch Required</p>
-        </div>
+        <div class="header"><h2>🚑 MEDICAL EMERGENCY</h2><p>Immediate Dispatch Required</p></div>
         <div class="content">
             <div class="alert-box">
                 <h3>⚠️ ACCIDENT REPORT</h3>
                 <p><strong>Severity:</strong> {severity}</p>
                 <p><strong>Location:</strong> {location}</p>
                 <p><strong>Time:</strong> {timestamp}</p>
-                <p><strong>Status:</strong> Active - Responding</p>
             </div>
-            
             <div class="action-box">
-                <h4>🚑 AMBULANCE DISPATCH INSTRUCTIONS</h4>
-                <ul>
-                    <li>Dispatch nearest ambulance to {location}</li>
-                    <li>Alert nearest hospital emergency room</li>
-                    <li>Prepare trauma team for {severity} severity</li>
-                    <li>Coordinate with police at scene</li>
-                </ul>
+                <h4>🚑 DISPATCH INSTRUCTIONS</h4>
+                <ul><li>Dispatch nearest ambulance to {location}</li><li>Alert nearest hospital ER</li><li>Prepare trauma team for {severity} severity</li><li>Coordinate with police</li></ul>
             </div>
-            
-            <div class="footer">
-                <p>Emergency Response Unit | 24x7</p>
-            </div>
+            <div class="footer"><p>Emergency Response Unit | 24x7</p></div>
         </div>
     </div>
 </body>
 </html>"""
-
 
 def format_family_email(alert_data, owner_details):
     """Detailed Email for Family Members"""
@@ -555,73 +495,49 @@ def format_family_email(alert_data, owner_details):
     
     return f"""<!DOCTYPE html>
 <html>
-<head>
-    <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #e67e22, #f39c12); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f4f4f4; padding: 20px; border-radius: 0 0 10px 10px; }}
-        .alert-box {{ background: white; border-left: 4px solid #e67e22; padding: 15px; margin: 15px 0; border-radius: 5px; }}
-        .action-box {{ background: #d5f5e3; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-        .footer {{ margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; text-align: center; }}
-    </style>
-</head>
+<head><style>
+    body {{ font-family: Arial, sans-serif; }}
+    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+    .header {{ background: #e67e22; color: white; padding: 20px; text-align: center; }}
+    .content {{ background: #f4f4f4; padding: 20px; }}
+    .alert-box {{ background: white; border-left: 4px solid #e67e22; padding: 15px; margin: 15px 0; }}
+    .action-box {{ background: #d5f5e3; padding: 15px; margin: 15px 0; }}
+</style></head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>🚨 ACCIDENT ALERT</h2>
-            <p>Family Notification - Important Information</p>
-        </div>
+        <div class="header"><h2>🚨 ACCIDENT ALERT</h2><p>Family Notification</p></div>
         <div class="content">
             <div class="alert-box">
                 <h3>Dear Family Member,</h3>
-                <p>We regret to inform you that an accident has been detected.</p>
-                <p><strong>Vehicle Owner:</strong> {owner_name}</p>
+                <p>An accident has been detected involving <strong>{owner_name}</strong>.</p>
                 <p><strong>Location:</strong> {location}</p>
                 <p><strong>Time:</strong> {timestamp}</p>
                 <p><strong>Severity:</strong> {severity}</p>
             </div>
-            
             <div class="action-box">
-                <h4>✅ EMERGENCY RESPONSE INITIATED</h4>
-                <ul>
-                    <li>✓ Police dispatched to location</li>
-                    <li>✓ Ambulance en route</li>
-                    <li>✓ Hospital on standby</li>
-                </ul>
+                <h4>✅ EMERGENCY RESPONSE</h4>
+                <ul><li>✓ Police dispatched</li><li>✓ Ambulance en route</li><li>✓ Hospital on standby</li></ul>
             </div>
-            
             <div class="alert-box">
-                <h4>📞 CONTACT INFORMATION</h4>
-                <p><strong>Police Control Room:</strong> +919876543214</p>
-                <p><strong>Ambulance Services:</strong> +919876543219</p>
+                <h4>📞 CONTACT</h4>
+                <p><strong>Police:</strong> +919876543214</p>
+                <p><strong>Ambulance:</strong> +919876543219</p>
             </div>
-            
-            <div class="footer">
-                <p>Please proceed to the location if needed.</p>
-                <p>Stay calm. Help is on the way.</p>
-                <p>This is an automated notification.</p>
-            </div>
+            <div class="footer"><p>Stay calm. Help is on the way.</p></div>
         </div>
     </div>
 </body>
 </html>"""
 
-
 # ========================================
-# MAIN ALERT FUNCTION - Called from app.py
+# MAIN ALERT FUNCTION
 # ========================================
 
 def send_alerts(alert_data):
-    """
-    Main alert function - sends to Police, Ambulance, and Family
-    This is called from app.py when an accident is detected
-    """
+    """Main alert function - sends to Police, Ambulance, and Family"""
     
     location = alert_data.get("location", "Unknown")
     zone = get_zone_from_location(location)
-    
-    # Get license plate if available (you can add OCR later)
     license_plate = alert_data.get("license_plate", None)
     
     print(f"\n{'='*70}")
@@ -638,14 +554,11 @@ def send_alerts(alert_data):
         "family": {"sms": 0, "email": 0, "contacts": []}
     }
     
-    # ========================================
     # 1. Send to Traffic Police
-    # ========================================
     print("📡 NOTIFYING TRAFFIC POLICE...")
     police_contacts = get_contacts_by_zone(zone, "police")
     
     for officer in police_contacts:
-        # SMS
         sms_msg = format_police_sms(alert_data)
         sms_success, _ = send_sms(officer["phone"], sms_msg, officer["name"], "police")
         if sms_success:
@@ -653,45 +566,36 @@ def send_alerts(alert_data):
             alerts_summary["police"]["contacts"].append(officer["name"])
             print(f"  ✅ SMS to: {officer['name']}")
         
-        # Email
         email_body = format_police_email(alert_data)
         email_success, _ = send_email(officer["email"], f"🚨 ACCIDENT ALERT - {location}", email_body, officer["name"], "police")
         if email_success:
             alerts_summary["police"]["email"] += 1
     
-    # ========================================
     # 2. Send to Ambulance Services
-    # ========================================
     print("\n🚑 NOTIFYING AMBULANCE SERVICES...")
     ambulance_contacts = get_contacts_by_zone(zone, "ambulance")
     
     for ambulance in ambulance_contacts:
-        # SMS
         sms_msg = format_ambulance_sms(alert_data)
         sms_success, _ = send_sms(ambulance["phone"], sms_msg, ambulance["name"], "ambulance")
         if sms_success:
             alerts_summary["ambulance"]["sms"] += 1
-            alerts_summary["ambulance"]["contacts"].append(ambulance["name"])
+            alerts_summary["ambbulance"]["contacts"].append(ambulance["name"])
             print(f"  ✅ SMS to: {ambulance['name']}")
         
-        # Email
         email_body = format_ambulance_email(alert_data)
         email_success, _ = send_email(ambulance["email"], f"🚑 MEDICAL EMERGENCY - {location}", email_body, ambulance["name"], "ambulance")
         if email_success:
             alerts_summary["ambulance"]["email"] += 1
     
-    # ========================================
-    # 3. Send to Family Members (if license plate available)
-    # ========================================
+    # 3. Send to Family Members
     if license_plate:
         print(f"\n👨‍👩‍👧 NOTIFYING FAMILY MEMBERS...")
         owner_details = get_vehicle_owner_from_plate(license_plate)
         
         if owner_details:
             family_members = get_family_members(owner_details)
-            
             for member in family_members:
-                # SMS
                 sms_msg = format_family_sms(alert_data, owner_details)
                 sms_success, _ = send_sms(member["phone"], sms_msg, member["name"], "family")
                 if sms_success:
@@ -699,7 +603,6 @@ def send_alerts(alert_data):
                     alerts_summary["family"]["contacts"].append(member["name"])
                     print(f"  ✅ SMS to: {member['name']} ({member['relation']})")
                 
-                # Email (if available)
                 if member.get("email"):
                     email_body = format_family_email(alert_data, owner_details)
                     email_success, _ = send_email(member["email"], f"🚨 Accident Alert - {location}", email_body, member["name"], "family")
@@ -710,9 +613,7 @@ def send_alerts(alert_data):
     else:
         print("\n⚠️ No license plate detected - Family notification skipped")
     
-    # ========================================
     # Summary
-    # ========================================
     total_police = len(alerts_summary["police"]["contacts"])
     total_ambulance = len(alerts_summary["ambulance"]["contacts"])
     total_family = len(alerts_summary["family"]["contacts"])
@@ -736,7 +637,6 @@ def send_alerts(alert_data):
         "message": f"Alerts sent to {total_police + total_ambulance + total_family} recipients"
     }
 
-
 # ========================================
 # Test Function
 # ========================================
@@ -753,7 +653,5 @@ def test_alerts():
     }
     return send_alerts(test_data)
 
-
-# For testing directly
 if __name__ == "__main__":
     test_alerts()
