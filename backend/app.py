@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import time
 from datetime import datetime
-from datetime import timedelta
 from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -15,7 +14,7 @@ import uvicorn
 from .model_loader import load_model, predict_single_frame
 from . import database
 from .auth import create_access_token
-from . import alerts 
+from . import alerts
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -123,9 +122,7 @@ async def predict_image(file: UploadFile = File(...)):
             saved_path = os.path.join(SAVED_FRAMES_DIR, filename)
             cv2.imwrite(saved_path, image)
             
-            # ==================================================
-            # FIX: TRIGGER ALERTS ENABLED
-            # ==================================================
+            # Trigger Alerts
             alert_details = {
                 "severity": prediction["severity"],
                 "confidence": prediction["confidence"],
@@ -134,7 +131,9 @@ async def predict_image(file: UploadFile = File(...)):
                 "camera_id": "CAM-IMG"
             }
             alerts.send_alerts(alert_details)
-            # ==================================================
+        
+        # Determine status for DB
+        status = "Alert Sent" if prediction["result"] == "Accident" else "Detected"
         
         database.log_accident({
             "camera_id": "CAM-IMG", 
@@ -142,7 +141,8 @@ async def predict_image(file: UploadFile = File(...)):
             "result": prediction["result"], 
             "confidence": prediction["confidence"], 
             "severity": prediction["severity"], 
-            "response_time": response_time
+            "response_time": response_time,
+            "status": status
         })
         
         return {
@@ -232,31 +232,28 @@ async def predict_video(file: UploadFile = File(...)):
         
         response_time = time.time() - start_time
         
-        # Determine severity for DB
         severity = "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor"
+        status = "Alert Sent" if overall_result == "Accident" else "Detected"
         
         database.log_accident({
             "camera_id": "CAM-VID", 
-            "location": "Upload", 
+            "location": "Video Upload", 
             "result": overall_result, 
             "confidence": overall_confidence, 
             "severity": severity, 
-            "response_time": response_time
+            "response_time": response_time,
+            "status": status
         })
 
-        # ==================================================
-        # FIX: TRIGGER ALERTS FOR VIDEO
-        # ==================================================
+        # Trigger Alert for Video
         if overall_result == "Accident":
-            alert_details = {
+            alerts.send_alerts({
                 "severity": severity,
                 "confidence": overall_confidence,
                 "location": "Video Upload",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "camera_id": "CAM-VID"
-            }
-            alerts.send_alerts(alert_details)
-        # ==================================================
+            })
         
         return {
             "success": True,
@@ -298,8 +295,10 @@ async def get_stats():
 @app.delete("/history")
 async def clear_history():
     try:
-        # You might need to add a clear_history function in database.py
-        return {"success": True, "message": "History cleared"}
+        if database.clear_history():
+            return {"success": True, "message": "History cleared"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to clear history")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
@@ -330,15 +329,15 @@ async def websocket_live_detection(websocket: WebSocket):
                     filename = f"live_accident_{timestamp}.jpg"
                     cv2.imwrite(os.path.join(SAVED_FRAMES_DIR, filename), frame)
                     
-                    # Log to DB
                     database.log_accident({
                         "result": prediction["result"],
                         "confidence": prediction["confidence"],
                         "input_type": "live",
-                        "severity": prediction.get("severity", "Medium")
+                        "severity": prediction.get("severity", "Medium"),
+                        "camera_id": "CAM-LIVE",
+                        "status": "Alert Sent"
                     })
 
-                    # Trigger Alert for Live
                     alerts.send_alerts({
                         "severity": prediction.get("severity", "Medium"),
                         "confidence": prediction["confidence"],
