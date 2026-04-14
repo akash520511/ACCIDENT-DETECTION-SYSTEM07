@@ -1,98 +1,124 @@
 import sqlite3
 import os
 from datetime import datetime
-from typing import List, Dict, Any
 from passlib.context import CryptContext
 
+# Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "accident_system.db")
+# Database path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASE_PATH = os.path.join(BASE_DIR, "accident_system.db")
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
+    """Initialize database tables"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    # Users Table (Police Officers)
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        badge_id TEXT UNIQUE NOT NULL,
-        hashed_password TEXT NOT NULL,
-        role TEXT DEFAULT 'officer'
-    )''')
-
-    # Accident Logs
-    c.execute('''CREATE TABLE IF NOT EXISTS accident_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        camera_id TEXT,
-        location TEXT,
-        vehicle_number TEXT,
-        owner_name TEXT,
-        address TEXT,
-        result TEXT,
-        confidence REAL,
-        severity TEXT,
-        response_time REAL,
-        alert_sent INTEGER DEFAULT 0
-    )''')
+    # Users table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            badge_id TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Detections table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS detections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            camera_id TEXT,
+            location TEXT,
+            result TEXT NOT NULL,
+            confidence REAL,
+            severity TEXT,
+            response_time REAL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     
     conn.commit()
     conn.close()
+    print("✅ Database initialized")
 
-def create_user(name, email, badge_id, password):
-    hashed = pwd_context.hash(password)
+# ================== AUTH FUNCTIONS ==================
+
+def create_user(name: str, email: str, badge_id: str, password: str):
     try:
-        conn = get_db()
-        conn.execute("INSERT INTO users (name, email, badge_id, hashed_password) VALUES (?, ?, ?, ?)",
-                     (name, email, badge_id.upper(), hashed))
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        hashed_password = pwd_context.hash(password)
+        cursor.execute(
+            "INSERT INTO users (name, email, badge_id, hashed_password) VALUES (?, ?, ?, ?)",
+            (name, email, badge_id, hashed_password)
+        )
         conn.commit()
         conn.close()
         return True
-    except Exception as e:
-        print(f"DB Error: {e}")
+    except sqlite3.IntegrityError:
         return False
 
 def authenticate_user(email: str, password: str):
-    conn = get_db()
-    user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    user = cursor.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
-    if not user: return None
-    if not pwd_context.verify(password, user['hashed_password']): return None
+    
+    if not user:
+        return False
+    if not pwd_context.verify(password, user['hashed_password']):
+        return False
+    
     return dict(user)
 
-def get_user_by_email(email: str):
-    conn = get_db()
-    user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-    conn.close()
-    return dict(user) if user else None
+# ================== LOGGING FUNCTIONS ==================
 
 def log_accident(data: dict):
-    conn = get_db()
-    conn.execute("""INSERT INTO accident_logs 
-        (timestamp, camera_id, location, vehicle_number, owner_name, address, result, confidence, severity, response_time, alert_sent)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (datetime.now(), data.get('camera_id'), data.get('location'), data.get('vehicle_number'),
-         data.get('owner_name'), data.get('address'), data.get('result'), data.get('confidence'),
-         data.get('severity'), data.get('response_time'), data.get('alert_sent', 0)))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """INSERT INTO detections 
+           (camera_id, location, result, confidence, severity, response_time) 
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (data.get('camera_id'), data.get('location'), data.get('result'), 
+         data.get('confidence'), data.get('severity'), data.get('response_time'))
+    )
     conn.commit()
     conn.close()
 
-def get_history(limit=100):
-    conn = get_db()
-    rows = conn.execute("SELECT * FROM accident_logs ORDER BY timestamp DESC LIMIT ?", (limit,)).fetchall()
+# ================== HISTORY FUNCTIONS ==================
+
+def get_history(limit: int = 50):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    rows = cursor.execute(
+        "SELECT * FROM detections ORDER BY timestamp DESC LIMIT ?", (limit,)
+    ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    return [dict(row) for row in rows]
 
 def get_stats():
-    conn = get_db()
-    total = conn.execute("SELECT COUNT(*) FROM accident_logs").fetchone()[0]
-    accidents = conn.execute("SELECT COUNT(*) FROM accident_logs WHERE result = 'Accident'").fetchone()[0]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    total = cursor.execute("SELECT COUNT(*) FROM detections").fetchone()[0]
+    accidents = cursor.execute("SELECT COUNT(*) FROM detections WHERE result = 'Accident'").fetchone()[0]
+    safe = total - accidents
+    avg_conf = cursor.execute("SELECT AVG(confidence) FROM detections").fetchone()[0] or 0
+    
     conn.close()
-    return {"total_detections": total, "accidents_detected": accidents, "safe_detections": total - accidents}
+    return {
+        "total_detections": total,
+        "accidents_detected": accidents,
+        "safe_detections": safe,
+        "average_confidence": round(avg_conf, 2)
+    }
