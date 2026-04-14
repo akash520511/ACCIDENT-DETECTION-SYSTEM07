@@ -15,7 +15,7 @@ import uvicorn
 from .model_loader import load_model, predict_single_frame
 from . import database
 from .auth import create_access_token
-from . import alerts  # Optional if you use alerts
+from . import alerts 
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -51,7 +51,7 @@ async def startup_event():
     global model
     print("Starting up Accident Detection System...")
     model = load_model()
-    database.init_db()  # Ensure this matches your database.py function name
+    database.init_db()
     print("System ready!")
 
 # ==================== AUTHENTICATION ====================
@@ -123,8 +123,18 @@ async def predict_image(file: UploadFile = File(...)):
             saved_path = os.path.join(SAVED_FRAMES_DIR, filename)
             cv2.imwrite(saved_path, image)
             
-            # Trigger Alerts (Optional)
-            # alerts.send_alerts({...})
+            # ==================================================
+            # FIX: TRIGGER ALERTS ENABLED
+            # ==================================================
+            alert_details = {
+                "severity": prediction["severity"],
+                "confidence": prediction["confidence"],
+                "location": "Image Upload Station",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "camera_id": "CAM-IMG"
+            }
+            alerts.send_alerts(alert_details)
+            # ==================================================
         
         database.log_accident({
             "camera_id": "CAM-IMG", 
@@ -222,14 +232,31 @@ async def predict_video(file: UploadFile = File(...)):
         
         response_time = time.time() - start_time
         
+        # Determine severity for DB
+        severity = "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor"
+        
         database.log_accident({
             "camera_id": "CAM-VID", 
             "location": "Upload", 
             "result": overall_result, 
             "confidence": overall_confidence, 
-            "severity": "Major" if accident_count > 5 else "Minor", 
+            "severity": severity, 
             "response_time": response_time
         })
+
+        # ==================================================
+        # FIX: TRIGGER ALERTS FOR VIDEO
+        # ==================================================
+        if overall_result == "Accident":
+            alert_details = {
+                "severity": severity,
+                "confidence": overall_confidence,
+                "location": "Video Upload",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "camera_id": "CAM-VID"
+            }
+            alerts.send_alerts(alert_details)
+        # ==================================================
         
         return {
             "success": True,
@@ -240,7 +267,7 @@ async def predict_video(file: UploadFile = File(...)):
             "accident_frames_count": accident_count,
             "accident_frames": accident_frames,
             "average_confidence": round(avg_confidence, 2),
-            "severity": "Critical" if accident_count > 10 else "Major" if accident_count > 5 else "Minor",
+            "severity": severity,
             "response_time": round(response_time, 3),
             "timestamp": datetime.now().isoformat()
         }
@@ -272,7 +299,6 @@ async def get_stats():
 async def clear_history():
     try:
         # You might need to add a clear_history function in database.py
-        # For now, returning success
         return {"success": True, "message": "History cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -303,11 +329,22 @@ async def websocket_live_detection(websocket: WebSocket):
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     filename = f"live_accident_{timestamp}.jpg"
                     cv2.imwrite(os.path.join(SAVED_FRAMES_DIR, filename), frame)
+                    
+                    # Log to DB
                     database.log_accident({
                         "result": prediction["result"],
                         "confidence": prediction["confidence"],
                         "input_type": "live",
-                        "severity": "Detected"
+                        "severity": prediction.get("severity", "Medium")
+                    })
+
+                    # Trigger Alert for Live
+                    alerts.send_alerts({
+                        "severity": prediction.get("severity", "Medium"),
+                        "confidence": prediction["confidence"],
+                        "location": "Live Camera Feed",
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "camera_id": "CAM-LIVE"
                     })
     except WebSocketDisconnect:
         print("WebSocket disconnected")
@@ -316,6 +353,5 @@ async def websocket_live_detection(websocket: WebSocket):
     finally:
         detection_active = False
 
-# This block is for local running only.
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
