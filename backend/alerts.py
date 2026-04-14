@@ -24,7 +24,7 @@ SENDER_EMAIL = "alert4559@gmail.com"
 # Emergency Service Contacts
 # ========================================
 
-# Traffic Police Contacts
+# Traffic Police Contacts (Zone-based)
 TRAFFIC_POLICE_CONTACTS = [
     {
         "id": 1,
@@ -141,13 +141,14 @@ ZONE_MAPPING = {
     "Market Square": "South Zone",
     "Tunnel Entrance": "West Zone",
     "Bridge Crossing": "West Zone",
-    "Upload": "Central",
+    "Image Upload Station": "Central",
     "Video Upload": "Central",
-    "Live Camera Feed": "Central"
+    "Live Camera Feed": "Central",
+    "Upload": "Central"
 }
 
-# Vehicle Registration Database (to find family members)
-# In production, this would come from RTO database
+# Vehicle Registration Database (for family notification)
+# In production, this would come from your database
 VEHICLE_REGISTRATION_DB = {
     "MH01AB1234": {
         "owner_name": "Rajesh Sharma",
@@ -174,26 +175,6 @@ VEHICLE_REGISTRATION_DB = {
         "emergency_contact_phone": "+919876543225",
         "emergency_contact_relation": "Spouse",
         "address": "Indiranagar, Bangalore"
-    },
-    "TN04GH3456": {
-        "owner_name": "Sunil Verma",
-        "owner_phone": "+919876543226",
-        "owner_email": "sunil.verma@email.com",
-        "relation": "Self",
-        "emergency_contact_name": "Anita Verma",
-        "emergency_contact_phone": "+919876543227",
-        "emergency_contact_relation": "Wife",
-        "address": "T Nagar, Chennai"
-    },
-    "GJ05IJ7890": {
-        "owner_name": "Meera Desai",
-        "owner_phone": "+919876543228",
-        "owner_email": "meera.desai@email.com",
-        "relation": "Self",
-        "emergency_contact_name": "Rahul Desai",
-        "emergency_contact_phone": "+919876543229",
-        "emergency_contact_relation": "Brother",
-        "address": "Vastrapur, Ahmedabad"
     }
 }
 
@@ -225,8 +206,8 @@ def get_contacts_by_zone(zone, contact_type=None):
 
 def get_vehicle_owner_from_plate(license_plate):
     """Get vehicle owner details from license plate number"""
-    # In production, this would query your database
-    # For now, we'll use a demo lookup
+    if not license_plate:
+        return None
     plate_clean = license_plate.upper().replace(" ", "")
     return VEHICLE_REGISTRATION_DB.get(plate_clean, None)
 
@@ -271,7 +252,7 @@ def get_family_members(owner_details):
 
 
 # ========================================
-# SMS Functions
+# SMS Function (Twilio)
 # ========================================
 
 def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
@@ -300,13 +281,17 @@ def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
         
         full_message = prefix + message
         
+        # Truncate to SMS length limit
+        if len(full_message) > 1600:
+            full_message = full_message[:1597] + "..."
+        
         # Twilio API
         url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_SID}/Messages.json"
         
         data = {
             "To": phone_number,
             "From": TWILIO_PHONE,
-            "Body": full_message[:1600]  # SMS length limit
+            "Body": full_message
         }
         
         response = requests.post(url, data=data, auth=(TWILIO_SID, TWILIO_TOKEN), timeout=10)
@@ -315,6 +300,7 @@ def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
             logger.info(f"SMS sent to {recipient_type}: {recipient_name} at {phone_number}")
             return True, "SMS sent"
         else:
+            logger.error(f"Twilio error: {response.text}")
             return False, f"Twilio error: {response.status_code}"
             
     except Exception as e:
@@ -323,7 +309,7 @@ def send_sms(phone_number, message, recipient_name=None, recipient_type=None):
 
 
 # ========================================
-# Email Functions
+# Email Function (SendGrid)
 # ========================================
 
 def send_email(email_address, subject, body_html, recipient_name=None, recipient_type=None):
@@ -332,6 +318,7 @@ def send_email(email_address, subject, body_html, recipient_name=None, recipient
         return False, "No email provided"
     
     if not SENDGRID_KEY or not SENDER_EMAIL:
+        logger.warning("SendGrid credentials not configured.")
         return False, "SendGrid not configured"
     
     try:
@@ -352,9 +339,10 @@ def send_email(email_address, subject, body_html, recipient_name=None, recipient
         response = requests.post(url, json=data, headers=headers, timeout=10)
         
         if response.status_code == 202:
-            logger.info(f"Email sent to {recipient_type}: {recipient_name}")
+            logger.info(f"Email sent to {recipient_type}: {recipient_name} at {email_address}")
             return True, "Email sent"
         else:
+            logger.error(f"SendGrid error: {response.text}")
             return False, f"SendGrid error: {response.status_code}"
             
     except Exception as e:
@@ -363,7 +351,7 @@ def send_email(email_address, subject, body_html, recipient_name=None, recipient
 
 
 # ========================================
-# Message Templates for Different Recipients
+# Message Templates
 # ========================================
 
 def format_police_sms(alert_data):
@@ -393,7 +381,6 @@ def format_ambulance_sms(alert_data):
     """SMS for Ambulance Services"""
     severity = alert_data.get("severity", "Unknown")
     location = alert_data.get("location", "Unknown")
-    camera_id = alert_data.get("camera_id", "Unknown")
     timestamp = alert_data.get("timestamp", datetime.now().strftime("%H:%M:%S"))
     
     return f"""🚑 MEDICAL EMERGENCY!
@@ -414,17 +401,14 @@ def format_family_sms(alert_data, owner_details):
     """SMS for Family Members"""
     severity = alert_data.get("severity", "Unknown")
     location = alert_data.get("location", "Unknown")
-    camera_id = alert_data.get("camera_id", "Unknown")
     timestamp = alert_data.get("timestamp", datetime.now().strftime("%H:%M:%S"))
-    
-    vehicle_plate = alert_data.get("license_plate", "Unknown")
     owner_name = owner_details.get("owner_name", "Your family member") if owner_details else "Your family member"
     
     return f"""🚨 ACCIDENT ALERT - FAMILY NOTIFICATION
 
 Dear Family Member,
 
-We regret to inform you that an accident involving vehicle {vehicle_plate} has been detected.
+An accident has been detected.
 
 Owner: {owner_name}
 Location: {location}
@@ -436,14 +420,9 @@ EMERGENCY RESPONSE:
 ✓ Ambulance en route
 ✓ Hospital on standby
 
-For updates, contact:
-Police Control: +919876543214
-Ambulance: +919876543219
+For updates: Police Control: +919876543214
 
-Please proceed to the location if needed.
-Stay calm. Help is on the way.
-
-- Accident Detection System"""
+Stay calm. Help is on the way."""
 
 
 def format_police_email(alert_data):
@@ -453,7 +432,6 @@ def format_police_email(alert_data):
     location = alert_data.get("location", "Unknown")
     camera_id = alert_data.get("camera_id", "Unknown")
     timestamp = alert_data.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    license_plate = alert_data.get("license_plate", "Not detected")
     
     severity_colors = {
         "Critical": "#FF0000",
@@ -492,7 +470,6 @@ def format_police_email(alert_data):
                 <p><span class="label">Confidence:</span> {confidence}%</p>
                 <p><span class="label">Location:</span> {location}</p>
                 <p><span class="label">Camera ID:</span> {camera_id}</p>
-                <p><span class="label">Vehicle Plate:</span> {license_plate}</p>
                 <p><span class="label">Time:</span> {timestamp}</p>
             </div>
             
@@ -502,7 +479,6 @@ def format_police_email(alert_data):
                     <li>✓ Dispatch patrol unit to {location}</li>
                     <li>✓ Coordinate with ambulance services</li>
                     <li>✓ Secure accident scene and manage traffic</li>
-                    <li>✓ Identify vehicle owner and notify family</li>
                     <li>✓ File incident report in system</li>
                 </ul>
             </div>
@@ -575,7 +551,6 @@ def format_family_email(alert_data, owner_details):
     severity = alert_data.get("severity", "Unknown")
     location = alert_data.get("location", "Unknown")
     timestamp = alert_data.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    license_plate = alert_data.get("license_plate", "Unknown")
     owner_name = owner_details.get("owner_name", "Your family member") if owner_details else "Your family member"
     
     return f"""<!DOCTYPE html>
@@ -600,7 +575,7 @@ def format_family_email(alert_data, owner_details):
         <div class="content">
             <div class="alert-box">
                 <h3>Dear Family Member,</h3>
-                <p>We regret to inform you that an accident has been detected involving vehicle <strong>{license_plate}</strong>.</p>
+                <p>We regret to inform you that an accident has been detected.</p>
                 <p><strong>Vehicle Owner:</strong> {owner_name}</p>
                 <p><strong>Location:</strong> {location}</p>
                 <p><strong>Time:</strong> {timestamp}</p>
@@ -613,7 +588,6 @@ def format_family_email(alert_data, owner_details):
                     <li>✓ Police dispatched to location</li>
                     <li>✓ Ambulance en route</li>
                     <li>✓ Hospital on standby</li>
-                    <li>✓ Investigation in progress</li>
                 </ul>
             </div>
             
@@ -621,13 +595,12 @@ def format_family_email(alert_data, owner_details):
                 <h4>📞 CONTACT INFORMATION</h4>
                 <p><strong>Police Control Room:</strong> +919876543214</p>
                 <p><strong>Ambulance Services:</strong> +919876543219</p>
-                <p><strong>Nearest Hospital:</strong> Check with dispatch</p>
             </div>
             
             <div class="footer">
                 <p>Please proceed to the location if needed.</p>
                 <p>Stay calm. Help is on the way.</p>
-                <p>This is an automated notification from the Accident Detection System.</p>
+                <p>This is an automated notification.</p>
             </div>
         </div>
     </div>
@@ -636,33 +609,34 @@ def format_family_email(alert_data, owner_details):
 
 
 # ========================================
-# Main Alert Function - Sends to ALL
+# MAIN ALERT FUNCTION - Called from app.py
 # ========================================
 
 def send_alerts(alert_data):
     """
-    Send alerts to:
-    1. Traffic Police (zone-based)
-    2. Ambulance Services (zone-based)
-    3. Vehicle Owner's Family Members
+    Main alert function - sends to Police, Ambulance, and Family
+    This is called from app.py when an accident is detected
     """
+    
+    location = alert_data.get("location", "Unknown")
+    zone = get_zone_from_location(location)
+    
+    # Get license plate if available (you can add OCR later)
+    license_plate = alert_data.get("license_plate", None)
+    
+    print(f"\n{'='*70}")
+    print(f"🚨 ACCIDENT DETECTED!")
+    print(f"📍 Location: {location}")
+    print(f"📍 Zone: {zone}")
+    print(f"📊 Severity: {alert_data.get('severity', 'Unknown')}")
+    print(f"📊 Confidence: {alert_data.get('confidence', 0)}%")
+    print(f"{'='*70}\n")
     
     alerts_summary = {
         "police": {"sms": 0, "email": 0, "contacts": []},
         "ambulance": {"sms": 0, "email": 0, "contacts": []},
-        "family": {"sms": 0, "email": 0, "contacts": []},
-        "total_notified": 0
+        "family": {"sms": 0, "email": 0, "contacts": []}
     }
-    
-    location = alert_data.get("location", "Unknown")
-    zone = get_zone_from_location(location)
-    license_plate = alert_data.get("license_plate", None)
-    
-    print(f"\n{'='*70}")
-    print(f"🚨 ACCIDENT DETECTED AT: {location}")
-    print(f"📍 Zone: {zone}")
-    print(f"🚗 Vehicle Plate: {license_plate or 'Not detected'}")
-    print(f"{'='*70}\n")
     
     # ========================================
     # 1. Send to Traffic Police
@@ -677,7 +651,7 @@ def send_alerts(alert_data):
         if sms_success:
             alerts_summary["police"]["sms"] += 1
             alerts_summary["police"]["contacts"].append(officer["name"])
-            print(f"  ✅ SMS to: {officer['name']} (Police)")
+            print(f"  ✅ SMS to: {officer['name']}")
         
         # Email
         email_body = format_police_email(alert_data)
@@ -698,7 +672,7 @@ def send_alerts(alert_data):
         if sms_success:
             alerts_summary["ambulance"]["sms"] += 1
             alerts_summary["ambulance"]["contacts"].append(ambulance["name"])
-            print(f"  ✅ SMS to: {ambulance['name']} (Ambulance)")
+            print(f"  ✅ SMS to: {ambulance['name']}")
         
         # Email
         email_body = format_ambulance_email(alert_data)
@@ -707,11 +681,10 @@ def send_alerts(alert_data):
             alerts_summary["ambulance"]["email"] += 1
     
     # ========================================
-    # 3. Send to Family Members (if license plate detected)
+    # 3. Send to Family Members (if license plate available)
     # ========================================
     if license_plate:
-        print(f"\n👨‍👩‍👧 NOTIFYING FAMILY MEMBERS for vehicle {license_plate}...")
-        
+        print(f"\n👨‍👩‍👧 NOTIFYING FAMILY MEMBERS...")
         owner_details = get_vehicle_owner_from_plate(license_plate)
         
         if owner_details:
@@ -729,56 +702,38 @@ def send_alerts(alert_data):
                 # Email (if available)
                 if member.get("email"):
                     email_body = format_family_email(alert_data, owner_details)
-                    email_success, _ = send_email(member["email"], f"🚨 Accident Alert - Vehicle {license_plate}", email_body, member["name"], "family")
+                    email_success, _ = send_email(member["email"], f"🚨 Accident Alert - {location}", email_body, member["name"], "family")
                     if email_success:
                         alerts_summary["family"]["email"] += 1
         else:
-            print(f"  ⚠️ No vehicle registration found for plate: {license_plate}")
+            print(f"  ⚠️ No registration found for plate: {license_plate}")
     else:
-        print("\n⚠️ License plate not detected - Family notification skipped")
+        print("\n⚠️ No license plate detected - Family notification skipped")
     
     # ========================================
     # Summary
     # ========================================
+    total_police = len(alerts_summary["police"]["contacts"])
+    total_ambulance = len(alerts_summary["ambulance"]["contacts"])
+    total_family = len(alerts_summary["family"]["contacts"])
     total_sms = alerts_summary["police"]["sms"] + alerts_summary["ambulance"]["sms"] + alerts_summary["family"]["sms"]
     total_email = alerts_summary["police"]["email"] + alerts_summary["ambulance"]["email"] + alerts_summary["family"]["email"]
-    total_contacts = len(alerts_summary["police"]["contacts"]) + len(alerts_summary["ambulance"]["contacts"]) + len(alerts_summary["family"]["contacts"])
     
     print(f"\n{'='*70}")
     print(f"📊 ALERT SUMMARY")
     print(f"{'='*70}")
-    print(f"👮 Police Notified: {len(alerts_summary['police']['contacts'])} officers")
-    print(f"🚑 Ambulance Notified: {len(alerts_summary['ambulance']['contacts'])} services")
-    print(f"👨‍👩‍👧 Family Notified: {len(alerts_summary['family']['contacts'])} members")
+    print(f"👮 Police Notified: {total_police} officers")
+    print(f"🚑 Ambulance Notified: {total_ambulance} services")
+    print(f"👨‍👩‍👧 Family Notified: {total_family} members")
     print(f"-" * 40)
     print(f"📱 Total SMS Sent: {total_sms}")
     print(f"📧 Total Emails Sent: {total_email}")
-    print(f"👥 Total Contacts Alerted: {total_contacts}")
     print(f"{'='*70}\n")
     
-    # Log to database
-    try:
-        from . import database
-        database.log_alert({
-            "timestamp": datetime.now().isoformat(),
-            "severity": alert_data.get("severity"),
-            "confidence": alert_data.get("confidence"),
-            "location": location,
-            "camera_id": alert_data.get("camera_id"),
-            "license_plate": license_plate,
-            "police_notified": len(alerts_summary["police"]["contacts"]),
-            "ambulance_notified": len(alerts_summary["ambulance"]["contacts"]),
-            "family_notified": len(alerts_summary["family"]["contacts"]),
-            "total_sms": total_sms,
-            "total_email": total_email
-        })
-    except Exception as e:
-        logger.error(f"Failed to log alert: {str(e)}")
-    
     return {
-        "success": total_contacts > 0,
+        "success": True,
         "summary": alerts_summary,
-        "message": f"Alerts sent to {total_contacts} people (Police: {len(alerts_summary['police']['contacts'])}, Ambulance: {len(alerts_summary['ambulance']['contacts'])}, Family: {len(alerts_summary['family']['contacts'])})"
+        "message": f"Alerts sent to {total_police + total_ambulance + total_family} recipients"
     }
 
 
@@ -787,13 +742,18 @@ def send_alerts(alert_data):
 # ========================================
 
 def test_alerts():
-    """Test the complete alert system"""
+    """Test the alert system"""
     test_data = {
         "severity": "High",
         "confidence": 94.2,
         "location": "Intersection A - Main St & 1st Ave",
         "camera_id": "CAM-1001",
-        "license_plate": "MH01AB1234",  # Test with a known plate
+        "license_plate": "MH01AB1234",
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     return send_alerts(test_data)
+
+
+# For testing directly
+if __name__ == "__main__":
+    test_alerts()
