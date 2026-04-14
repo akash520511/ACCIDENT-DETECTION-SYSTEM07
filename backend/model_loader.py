@@ -4,6 +4,7 @@ import numpy as np
 from typing import Dict, Any
 from ultralytics import YOLO
 
+# Path configuration
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__), 
     "..", "AccidentDetectionProject", "models", "accident_detection_model", "best", "yolov8s.pt"
@@ -34,7 +35,7 @@ def load_model():
 def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
     try:
         # Run inference
-        results = model.predict(source=image, verbose=False, conf=0.25)
+        results = model.predict(source=image, verbose=False, conf=0.35, imgsz=320)
         
         detected_objects = []
         max_confidence = 0.0
@@ -50,15 +51,14 @@ def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
                     
                     detected_objects.append(class_name)
                     
-                    # Check for vehicles (Car, Truck, Bus, Motorcycle)
+                    # Check for vehicles
                     if class_name in ["car", "truck", "bus", "motorcycle"]:
                         if conf > max_confidence:
                             max_confidence = conf
 
-        # LOGIC:
-        # Since we are using a standard model (not custom trained on accidents),
-        # we simulate accident detection by checking if vehicles are detected with high confidence.
-        if max_confidence > 0.5:
+        # FIX: Increased threshold to 0.70 (70%) to reduce false alarms
+        # If confidence is > 70%, we assume a likely accident/incident for this demo
+        if max_confidence > 0.70:
             return {
                 "result": "Accident",
                 "confidence": max_confidence * 100,
