@@ -3,12 +3,1758 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccidentAI - Premium Detection System</title>
+    <title>Intelligent Accident Detection System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ========================================
+           All CSS styles from previous version
+           ======================================== */
+        :root {
+            --navy: #0A192F;
+            --navy-light: #112240;
+            --navy-dark: #020c1b;
+            --gold: #FFD700;
+            --gold-dark: #E6C200;
+            --gold-light: #FFE44D;
+            --teal: #3AAFA9;
+            --teal-dark: #2D8A85;
+            --teal-light: #64D8D2;
+            --white: #FFFFFF;
+            --white-muted: #CCD6F6;
+            --gray: #8892B0;
+            --gray-dark: #495670;
+            --success: #00D26A;
+            --danger: #FF4757;
+            --warning: #FFB800;
+            
+            --glass-bg: rgba(17, 34, 64, 0.7);
+            --glass-border: rgba(58, 175, 169, 0.2);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 30px rgba(58, 175, 169, 0.3);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--navy);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--teal) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--gold) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--teal-light) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.9); }
+            75% { transform: translate(30px, 50px) scale(1.05); }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(58, 175, 169, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(58, 175, 169, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 32px;
+            background: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all var(--transition-base);
+        }
+
+        .nav-container.scrolled {
+            padding: 12px 32px;
+            background: rgba(10, 25, 47, 0.95);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--white);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--white), var(--teal-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all var(--transition-base);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--teal);
+            border-radius: 2px;
+            transition: width var(--transition-base);
+        }
+
+        .nav-link:hover {
+            color: var(--white);
+            background: rgba(58, 175, 169, 0.1);
+        }
+
+        .nav-link.active {
+            color: var(--teal-light);
+        }
+
+        .nav-link.active::before {
+            width: 60%;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 210, 106, 0.1);
+            border: 1px solid rgba(0, 210, 106, 0.3);
+            border-radius: 50px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .status-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--success);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(58, 175, 169, 0.1);
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--teal), var(--gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+            color: var(--white);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 76px;
+            left: 0;
+            right: 0;
+            background: rgba(10, 25, 47, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 999;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mobile-menu.show {
+            display: flex;
+        }
+
+        .mobile-nav-link {
+            padding: 16px 20px;
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .mobile-nav-link:hover, .mobile-nav-link.active {
+            background: rgba(58, 175, 169, 0.1);
+            color: var(--teal-light);
+        }
+
+        /* Main Content & Sections */
+        .main-content {
+            padding-top: 76px;
+            min-height: 100vh;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 32px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--white), var(--teal-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Login Page */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            backdrop-filter: blur(20px);
+            animation: slideUp 0.5s ease;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .login-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: var(--gray);
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(10, 25, 47, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--white);
+            font-size: 16px;
+            transition: all var(--transition-base);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(58, 175, 169, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: calc(100vh - 76px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 32px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 24px;
+            background: rgba(58, 175, 169, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            margin-bottom: 32px;
+            animation: slideDown 0.6s ease;
+        }
+
+        .hero-badge i {
+            color: var(--gold);
+            font-size: 16px;
+        }
+
+        .hero-badge span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--teal-light);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(40px, 8vw, 72px);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .title-line {
+            display: block;
+            animation: slideUp 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        .title-line:nth-child(1) { animation-delay: 0.2s; }
+        .title-line:nth-child(2) { animation-delay: 0.4s; }
+        .title-line:nth-child(3) { animation-delay: 0.6s; }
+
+        .title-line.highlight {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+            animation: fadeIn 1s ease 0.8s forwards;
+            opacity: 0;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            animation: fadeIn 1s ease 1s forwards;
+            opacity: 0;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 32px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--teal);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-info {
+            text-align: left;
+        }
+
+        .stat-value {
+            display: block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 60px;
+            animation: fadeIn 1s ease 1.2s forwards;
+            opacity: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 32px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            color: var(--white);
+            box-shadow: 0 4px 20px rgba(58, 175, 169, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(58, 175, 169, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--teal);
+            background: rgba(58, 175, 169, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #E53935);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--gray);
+            padding: 10px 16px;
+        }
+
+        .btn-ghost:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dashboard Stats */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 48px;
+        }
+
+        .dashboard-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .card-icon.teal {
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+        }
+
+        .card-icon.gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-value {
+            display: block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .card-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        /* Upload Section */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .upload-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+        }
+
+        .upload-card:hover {
+            border-color: var(--teal);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .upload-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .upload-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .upload-icon.video {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        }
+
+        .upload-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-header p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: var(--radius-lg);
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--teal);
+            background: rgba(58, 175, 169, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .upload-placeholder {
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .upload-placeholder i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--teal);
+        }
+
+        .upload-placeholder span {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .upload-placeholder small {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .preview-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .preview-container img,
+        .preview-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(255, 71, 87, 0.9);
+            color: var(--white);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            z-index: 10;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.1);
+            background: var(--danger);
+        }
+
+        .upload-btn {
+            width: 100%;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            animation: slideUp 0.4s ease;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(58, 175, 169, 0.1);
+        }
+
+        .results-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+        }
+
+        .results-content {
+            padding: 32px;
+        }
+
+        .result-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .result-badge {
+            padding: 16px 48px;
+            border-radius: var(--radius-lg);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .result-badge.accident {
+            background: linear-gradient(135deg, var(--danger), #E53935);
+            box-shadow: 0 8px 30px rgba(255, 71, 87, 0.4);
+        }
+
+        .result-badge.safe {
+            background: linear-gradient(135deg, var(--success), #00B85C);
+            box-shadow: 0 8px 30px rgba(0, 210, 106, 0.4);
+        }
+
+        .confidence-display {
+            text-align: center;
+        }
+
+        .confidence-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .confidence-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .confidence-bar {
+            width: 200px;
+            height: 8px;
+            background: var(--navy-dark);
+            border-radius: 4px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--teal), var(--gold));
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .detail-item {
+            padding: 20px;
+            background: rgba(10, 25, 47, 0.5);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .detail-value.severity-high { color: var(--danger); }
+        .detail-value.severity-medium { color: var(--warning); }
+        .detail-value.severity-low { color: var(--success); }
+
+        .accident-frames-list {
+            margin-top: 24px;
+        }
+
+        .accident-frames-list h4 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: var(--gray);
+        }
+
+        .frames-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .frame-item {
+            padding: 16px;
+            background: rgba(10, 25, 47, 0.5);
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .frame-time {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--teal-light);
+        }
+
+        .frame-confidence {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        /* Live Detection Section */
+        .live-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .camera-view {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .camera-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .status-indicator-live {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+        }
+
+        .status-indicator-live .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gray);
+        }
+
+        .status-indicator-live.active .dot {
+            background: var(--success);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .status-indicator-live .text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--navy-dark);
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 25, 47, 0.8);
+        }
+
+        .overlay-content {
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .overlay-content i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            color: var(--teal);
+            opacity: 0.5;
+        }
+
+        .overlay-content span {
+            display: block;
+            font-size: 18px;
+        }
+
+        .detection-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+        }
+
+        .detection-label {
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .detection-label.accident {
+            background: rgba(255, 71, 87, 0.9);
+            animation: alertPulse 0.5s ease infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); }
+        }
+
+        .result-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .confidence-text {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-left: 8px;
+        }
+
+        .camera-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .detection-stats-live {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+
+        .live-stat {
+            text-align: center;
+        }
+
+        .live-stat .label {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .live-stat .value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--teal-light);
+        }
+
+        /* History Section - Premium Table */
+        .history-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--white);
+            font-size: 15px;
+            outline: none;
+            transition: all var(--transition-base);
+        }
+
+        .search-box input:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(58, 175, 169, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: var(--gray);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--white);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .history-table-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow-x: auto;
+            margin-bottom: 32px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 16px 20px;
+            text-align: left;
+        }
+
+        .history-table th {
+            background: rgba(58, 175, 169, 0.1);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-table tr {
+            border-bottom: 1px solid var(--glass-border);
+            transition: background var(--transition-fast);
+        }
+
+        .history-table tbody tr:hover {
+            background: rgba(58, 175, 169, 0.05);
+        }
+
+        .history-table td {
+            font-size: 14px;
+        }
+
+        .result-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-tag.accident {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+        }
+
+        .result-tag.safe {
+            background: rgba(0, 210, 106, 0.15);
+            color: var(--success);
+        }
+
+        .severity-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .severity-tag.high, .severity-tag.critical, .severity-tag.major {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+        }
+
+        .severity-tag.medium, .severity-tag.minor {
+            background: rgba(255, 184, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .severity-tag.low, .severity-tag.none {
+            background: rgba(0, 210, 106, 0.15);
+            color: var(--success);
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-tag.active {
+            background: rgba(0, 210, 106, 0.15);
+            color: var(--success);
+        }
+
+        .status-tag.inactive {
+            background: rgba(136, 146, 176, 0.15);
+            color: var(--gray);
+        }
+
+        .status-tag.maintenance {
+            background: rgba(255, 184, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 80px 32px;
+            color: var(--gray);
+        }
+
+        .history-empty i {
+            font-size: 64px;
+            margin-bottom: 24px;
+            opacity: 0.3;
+        }
+
+        .history-empty h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--white);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--white);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 500;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--teal);
+            border-color: var(--teal);
+        }
+
+        /* Modal & Alerts */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            max-width: 480px;
+            width: 100%;
+            overflow: hidden;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 32px;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .alert-header {
+            background: linear-gradient(135deg, var(--danger), #E53935);
+        }
+
+        .alert-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .alert-icon.pulse {
+            animation: alertIconPulse 1s ease infinite;
+        }
+
+        @keyframes alertIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .modal-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .alert-info {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+        }
+
+        .info-row .label {
+            color: var(--gray);
+        }
+
+        .info-row .value {
+            font-weight: 600;
+        }
+
+        .modal-footer {
+            padding: 20px 32px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 32px;
+        }
+
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid var(--glass-border);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-content h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .loading-content p {
+            color: var(--gray);
+            margin-bottom: 24px;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 6px;
+            background: var(--navy-dark);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--teal), var(--gold));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Notifications */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-visual {
+                display: none;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 12px 16px;
+            }
+            
+            .section-container {
+                padding: 40px 16px;
+            }
+            
+            .section-title {
+                font-size: 32px;
+            }
+            
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .hero-subtitle {
+                font-size: 16px;
+            }
+            
+            .hero-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat-card {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .upload-card {
+                padding: 24px;
+            }
+            
+            .result-main {
+                flex-direction: column;
+            }
+            
+            .result-badge {
+                font-size: 22px;
+                padding: 12px 32px;
+            }
+            
+            .confidence-value {
+                font-size: 36px;
+            }
+            
+            .detection-stats-live {
+                gap: 24px;
+            }
+            
+            .user-name {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 20px;
+            }
+            
+            .hero-badge {
+                padding: 8px 16px;
+            }
+            
+            .hero-badge span {
+                font-size: 12px;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .camera-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .camera-controls {
+                justify-content: center;
+            }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Animated Background -->
@@ -19,285 +1765,421 @@
         <div class="grid-overlay"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="nav-container" id="navbar">
-        <div class="nav-content">
-            <a href="#home" class="logo">
-                <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
-                <span class="logo-text">AccidentAI</span>
-            </a>
-            <div class="nav-links">
-                <a href="#home" class="nav-link active" data-section="home"><i class="fas fa-home"></i><span>Home</span></a>
-                <a href="#upload" class="nav-link" data-section="upload"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>
-                <a href="#live" class="nav-link" data-section="live"><i class="fas fa-video"></i><span>Live</span></a>
-                <a href="#history" class="nav-link" data-section="history"><i class="fas fa-history"></i><span>History</span></a>
-            </div>
-            <div class="nav-actions">
-                <div class="status-indicator">
-                    <span class="status-dot"></span>
-                    <span class="status-text">System Active</span>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-shield-alt"></i>
                 </div>
-                <button class="btn btn-danger small" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                <h2>Accident Detection System</h2>
+                <p>Sign in to access the dashboard</p>
             </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            <div class="login-footer">
+                <p>Demo credentials: admin / admin123</p>
+            </div>
         </div>
-    </nav>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <a href="#home" class="mobile-nav-link active" data-section="home">Home</a>
-        <a href="#upload" class="mobile-nav-link" data-section="upload">Upload</a>
-        <a href="#live" class="mobile-nav-link" data-section="live">Live</a>
-        <a href="#history" class="mobile-nav-link" data-section="history">History</a>
-        <a href="#" class="mobile-nav-link" onclick="logout()">Logout</a>
     </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Hero Section -->
-        <section id="home" class="section hero-section active">
-            <div class="hero-container">
-                <div class="hero-badge">
-                    <i class="fas fa-bolt"></i>
-                    <span>94.2% Accuracy | 1.3s Response Time</span>
-                </div>
-                <h1 class="hero-title">
-                    <span class="title-line">Intelligent</span>
-                    <span class="title-line highlight">Accident Detection</span>
-                    <span class="title-line">System</span>
-                </h1>
-                <p class="hero-subtitle">Advanced AI-powered system for real-time accident detection, severity classification, and emergency response automation.</p>
-                <div class="hero-stats">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-brain"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value">94.2%</span>
-                            <span class="stat-label">Detection Accuracy</span>
-                        </div>
+    <!-- Main App (Hidden until login) -->
+    <div id="mainApp" style="display: none;">
+        <!-- Navigation -->
+        <nav class="nav-container" id="navbar">
+            <div class="nav-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value">1.3s</span>
-                            <span class="stat-label">Response Time</span>
-                        </div>
+                    <span class="logo-text">AccidentAI</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link active" data-section="home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a class="nav-link" data-section="upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Upload</span>
+                    </a>
+                    <a class="nav-link" data-section="live">
+                        <i class="fas fa-video"></i>
+                        <span>Live Detection</span>
+                    </a>
+                    <a class="nav-link" data-section="history">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">System Active</span>
+                    </div>
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" onclick="navigateTo('upload')"><i class="fas fa-rocket"></i> Start Detection</button>
-                    <button class="btn btn-secondary" onclick="navigateTo('live')"><i class="fas fa-play-circle"></i> Live Mode</button>
-                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-        </section>
+        </nav>
 
-        <!-- Upload Section -->
-        <section id="upload" class="section upload-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2 class="section-title">Upload & Detect</h2>
-                    <p class="section-subtitle">Upload images or videos for instant accident detection</p>
-                </div>
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a class="mobile-nav-link active" data-section="home">Home</a>
+            <a class="mobile-nav-link" data-section="upload">Upload</a>
+            <a class="mobile-nav-link" data-section="live">Live Detection</a>
+            <a class="mobile-nav-link" data-section="history">History</a>
+        </div>
 
-                <!-- Stats Dashboard -->
-                <div class="dashboard-stats">
-                    <div class="dashboard-card">
-                        <div class="card-icon teal"><i class="fas fa-tasks"></i></div>
-                        <div class="card-content">
-                            <span class="card-value" id="totalDetections">0</span>
-                            <span class="card-label">Total Detections</span>
-                        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <section id="home" class="section hero-section active">
+                <div class="hero-container">
+                    <div class="hero-badge">
+                        <i class="fas fa-bolt"></i>
+                        <span>94.2% Accuracy | 1.3s Response Time</span>
                     </div>
-                    <div class="dashboard-card">
-                        <div class="card-icon gold"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div class="card-content">
-                            <span class="card-value" id="accidentsDetected">0</span>
-                            <span class="card-label">Accidents Found</span>
-                        </div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-icon teal"><i class="fas fa-check-circle"></i></div>
-                        <div class="card-content">
-                            <span class="card-value" id="safeDetections">0</span>
-                            <span class="card-label">Safe Detected</span>
-                        </div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-icon gold"><i class="fas fa-percentage"></i></div>
-                        <div class="card-content">
-                            <span class="card-value" id="avgConfidence">0%</span>
-                            <span class="card-label">Avg Confidence</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Upload Cards -->
-                <div class="upload-grid">
-                    <!-- Image Upload -->
-                    <div class="upload-card">
-                        <div class="upload-header">
-                            <div class="upload-icon"><i class="fas fa-image"></i></div>
-                            <h3>Image Detection</h3>
-                            <p>Upload an image for instant analysis</p>
-                        </div>
-                        <div class="upload-area" id="imageDropZone">
-                            <input type="file" id="imageInput" accept="image/*" hidden>
-                            <div class="upload-placeholder" id="imagePlaceholder">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Drag & drop or click to upload</span>
-                                <small>Supports: JPG, PNG, JPEG</small>
+                    <h1 class="hero-title">
+                        <span class="title-line">Intelligent</span>
+                        <span class="title-line highlight">Accident Detection</span>
+                        <span class="title-line">System</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Advanced AI-powered system for real-time accident detection, 
+                        severity classification, and emergency response automation.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-brain"></i>
                             </div>
-                            <div class="preview-container" id="imagePreview" style="display: none;">
-                                <img id="previewImage" alt="Preview">
-                                <button class="remove-btn" onclick="clearImagePreview()"><i class="fas fa-times"></i></button>
+                            <div class="stat-info">
+                                <span class="stat-value">94.2%</span>
+                                <span class="stat-label">Detection Accuracy</span>
                             </div>
                         </div>
-                        <button class="btn btn-primary upload-btn" onclick="analyzeImage()"><i class="fas fa-search"></i> Analyze Image</button>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value">1.3s</span>
+                                <span class="stat-label">Response Time</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value">3</span>
+                                <span class="stat-label">Input Types</span>
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- Video Upload -->
-                    <div class="upload-card">
-                        <div class="upload-header">
-                            <div class="upload-icon video"><i class="fas fa-film"></i></div>
-                            <h3>Video Detection</h3>
-                            <p>Frame-by-frame accident analysis</p>
-                        </div>
-                        <div class="upload-area" id="videoDropZone">
-                            <input type="file" id="videoInput" accept="video/*" hidden>
-                            <div class="upload-placeholder" id="videoPlaceholder">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Drag & drop or click to upload</span>
-                                <small>Supports: MP4, AVI, MOV</small>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" onclick="navigateTo('upload')">
+                            <i class="fas fa-rocket"></i>
+                            Start Detection
+                        </button>
+                        <button class="btn btn-secondary" onclick="navigateTo('live')">
+                            <i class="fas fa-play-circle"></i>
+                            Live Mode
+                        </button>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="visual-container">
+                            <div class="visual-ring ring-1"></div>
+                            <div class="visual-ring ring-2"></div>
+                            <div class="visual-ring ring-3"></div>
+                            <div class="visual-core">
+                                <i class="fas fa-eye"></i>
                             </div>
-                            <div class="preview-container video-preview" id="videoPreview" style="display: none;">
-                                <video id="previewVideo" controls></video>
-                                <button class="remove-btn" onclick="clearVideoPreview()"><i class="fas fa-times"></i></button>
-                            </div>
                         </div>
-                        <button class="btn btn-primary upload-btn" onclick="analyzeVideo()"><i class="fas fa-search"></i> Analyze Video</button>
                     </div>
                 </div>
+            </section>
 
-                <!-- Results Panel -->
-                <div class="results-panel" id="resultsPanel" style="display: none;">
-                    <div class="results-header">
-                        <h3><i class="fas fa-chart-bar"></i> Detection Results</h3>
-                        <button class="btn btn-ghost" onclick="closeResults()"><i class="fas fa-times"></i></button>
+            <!-- Upload Section -->
+            <section id="upload" class="section upload-section">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Upload & Detect</h2>
+                        <p class="section-subtitle">Upload images or videos for instant accident detection</p>
                     </div>
-                    <div class="results-content" id="resultsContent"></div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Live Detection Section -->
-        <section id="live" class="section live-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2 class="section-title">Live Detection</h2>
-                    <p class="section-subtitle">Real-time accident detection using your camera</p>
-                </div>
-
-                <div class="live-container">
-                    <div class="camera-view">
-                        <div class="camera-header">
-                            <div class="camera-status">
-                                <span class="status-indicator-live" id="cameraStatus">
-                                    <span class="dot"></span>
-                                    <span class="text">Camera Off</span>
-                                </span>
+                    <div class="dashboard-stats">
+                        <div class="dashboard-card">
+                            <div class="card-icon teal">
+                                <i class="fas fa-tasks"></i>
                             </div>
-                            <div class="camera-controls">
-                                <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()"><i class="fas fa-video"></i> Start Camera</button>
-                                <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" style="display: none;"><i class="fas fa-stop"></i> Stop Camera</button>
+                            <div class="card-content">
+                                <span class="card-value" id="totalDetections">0</span>
+                                <span class="card-label">Total Detections</span>
                             </div>
                         </div>
-                        <div class="video-container">
-                            <video id="webcamVideo" autoplay playsinline muted></video>
-                            <canvas id="overlayCanvas"></canvas>
-                            <div class="camera-overlay" id="cameraOverlay">
-                                <div class="overlay-content">
-                                    <i class="fas fa-camera"></i>
-                                    <span>Click "Start Camera" to begin</span>
+                        <div class="dashboard-card">
+                            <div class="card-icon gold">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="accidentsDetected">0</span>
+                                <span class="card-label">Accidents Found</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-icon teal">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="safeDetections">0</span>
+                                <span class="card-label">Safe Detected</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-icon gold">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="avgConfidence">0%</span>
+                                <span class="card-label">Avg Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upload-grid">
+                        <div class="upload-card">
+                            <div class="upload-header">
+                                <div class="upload-icon">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <h3>Image Detection</h3>
+                                <p>Upload an image for instant analysis</p>
+                            </div>
+                            <div class="upload-area" id="imageDropZone">
+                                <input type="file" id="imageInput" accept="image/*" hidden>
+                                <div class="upload-placeholder" id="imagePlaceholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Drag & drop or click to upload</span>
+                                    <small>Supports: JPG, PNG, JPEG</small>
+                                </div>
+                                <div class="preview-container" id="imagePreview" style="display: none;">
+                                    <img id="previewImage" alt="Preview">
+                                    <button class="remove-btn" onclick="clearImagePreview()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="detection-overlay" id="detectionOverlay" style="display: none;">
-                                <div class="detection-label" id="detectionLabel">
-                                    <span class="result-text">No Accident</span>
-                                    <span class="confidence-text">0%</span>
+                            <button class="btn btn-primary upload-btn" onclick="analyzeImage()">
+                                <i class="fas fa-search"></i>
+                                Analyze Image
+                            </button>
+                        </div>
+
+                        <div class="upload-card">
+                            <div class="upload-header">
+                                <div class="upload-icon video">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                <h3>Video Detection</h3>
+                                <p>Frame-by-frame accident analysis</p>
+                            </div>
+                            <div class="upload-area" id="videoDropZone">
+                                <input type="file" id="videoInput" accept="video/*" hidden>
+                                <div class="upload-placeholder" id="videoPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Drag & drop or click to upload</span>
+                                    <small>Supports: MP4, AVI, MOV</small>
+                                </div>
+                                <div class="preview-container video-preview" id="videoPreview" style="display: none;">
+                                    <video id="previewVideo" controls></video>
+                                    <button class="remove-btn" onclick="clearVideoPreview()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
+                            <button class="btn btn-primary upload-btn" onclick="analyzeVideo()">
+                                <i class="fas fa-search"></i>
+                                Analyze Video
+                            </button>
                         </div>
-                        <div class="camera-footer">
-                            <div class="detection-stats-live">
-                                <div class="live-stat">
-                                    <span class="label">Status</span>
-                                    <span class="value" id="liveStatus">Inactive</span>
+                    </div>
+
+                    <div class="results-panel" id="resultsPanel" style="display: none;">
+                        <div class="results-header">
+                            <h3><i class="fas fa-chart-bar"></i> Detection Results</h3>
+                            <button class="btn btn-ghost" onclick="closeResults()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="results-content" id="resultsContent"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Detection Section -->
+            <section id="live" class="section live-section">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Live Detection</h2>
+                        <p class="section-subtitle">Real-time accident detection using your camera</p>
+                    </div>
+
+                    <div class="live-container">
+                        <div class="camera-view">
+                            <div class="camera-header">
+                                <div class="camera-status">
+                                    <span class="status-indicator-live" id="cameraStatus">
+                                        <span class="dot"></span>
+                                        <span class="text">Camera Off</span>
+                                    </span>
                                 </div>
-                                <div class="live-stat">
-                                    <span class="label">Confidence</span>
-                                    <span class="value" id="liveConfidence">--</span>
+                                <div class="camera-controls">
+                                    <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
+                                        <i class="fas fa-video"></i>
+                                        Start Camera
+                                    </button>
+                                    <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" style="display: none;">
+                                        <i class="fas fa-stop"></i>
+                                        Stop Camera
+                                    </button>
                                 </div>
-                                <div class="live-stat">
-                                    <span class="label">FPS</span>
-                                    <span class="value" id="liveFPS">--</span>
+                            </div>
+                            <div class="video-container">
+                                <video id="webcamVideo" autoplay playsinline muted></video>
+                                <canvas id="overlayCanvas"></canvas>
+                                <div class="camera-overlay" id="cameraOverlay">
+                                    <div class="overlay-content">
+                                        <i class="fas fa-camera"></i>
+                                        <span>Click "Start Camera" to begin</span>
+                                    </div>
+                                </div>
+                                <div class="detection-overlay" id="detectionOverlay" style="display: none;">
+                                    <div class="detection-label" id="detectionLabel">
+                                        <span class="result-text">No Accident</span>
+                                        <span class="confidence-text">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-footer">
+                                <div class="detection-stats-live">
+                                    <div class="live-stat">
+                                        <span class="label">Status</span>
+                                        <span class="value" id="liveStatus">Inactive</span>
+                                    </div>
+                                    <div class="live-stat">
+                                        <span class="label">Confidence</span>
+                                        <span class="value" id="liveConfidence">--</span>
+                                    </div>
+                                    <div class="live-stat">
+                                        <span class="label">FPS</span>
+                                        <span class="value" id="liveFPS">--</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- History Section -->
-        <section id="history" class="section history-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2 class="section-title">Detection History</h2>
-                    <p class="section-subtitle">View all past detection records</p>
-                </div>
-
-                <div class="history-controls">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="historySearch" placeholder="Search detections...">
+            <!-- History Section with Premium Table -->
+            <section id="history" class="section history-section">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Detection History</h2>
+                        <p class="section-subtitle">View all past detection records with camera details</p>
                     </div>
-                    <button class="btn btn-secondary" onclick="refreshHistory()"><i class="fas fa-sync-alt"></i> Refresh</button>
-                    <button class="btn btn-danger" onclick="clearAllHistory()"><i class="fas fa-trash"></i> Clear All</button>
-                </div>
 
-                <div class="history-table-container">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>India Timestamp</th>
-                                <th>Camera ID / Location</th>
-                                <th>Result</th>
-                                <th>Confidence</th>
-                                <th>Severity</th>
-                                <th>Status</th>
-                                <th>Response Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                            <!-- History data will be inserted here -->
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="history-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="historySearch" placeholder="Search by camera ID or location...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="resultFilter" class="filter-select">
+                                <option value="all">All Results</option>
+                                <option value="Accident">Accident</option>
+                                <option value="No Accident">No Accident</option>
+                            </select>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="refreshHistory()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllHistory()">
+                            <i class="fas fa-trash"></i>
+                            Clear All
+                        </button>
+                    </div>
 
-                <div class="history-empty" id="historyEmpty" style="display: none;">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Detection History</h3>
-                    <p>Start detecting to build your history</p>
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Camera ID</th>
+                                    <th>Location</th>
+                                    <th>Result</th>
+                                    <th>Confidence</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Response Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; color: #8892B0; padding: 40px;">Loading history...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="history-empty" id="historyEmpty" style="display: none;">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Detection History</h3>
+                        <p>Start detecting to build your history</p>
+                    </div>
+
+                    <div class="pagination" id="pagination"></div>
                 </div>
-            </div>
-        </section>
-    </main>
+            </section>
+        </main>
+    </div>
 
     <!-- Alert Modal -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal alert-modal">
             <div class="modal-header alert-header">
-                <div class="alert-icon pulse"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="alert-icon pulse">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
                 <h3>ACCIDENT DETECTED!</h3>
             </div>
             <div class="modal-body">
@@ -311,13 +2193,24 @@
                         <span class="value" id="alertSeverity">--</span>
                     </div>
                     <div class="info-row">
+                        <span class="label">Camera ID:</span>
+                        <span class="value" id="alertCameraId">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Location:</span>
+                        <span class="value" id="alertLocation">--</span>
+                    </div>
+                    <div class="info-row">
                         <span class="label">Time:</span>
                         <span class="value" id="alertTime">--</span>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" onclick="closeAlertModal()"><i class="fas fa-check"></i> Acknowledge</button>
+                <button class="btn btn-danger" onclick="closeAlertModal()">
+                    <i class="fas fa-check"></i>
+                    Acknowledge
+                </button>
             </div>
         </div>
     </div>
@@ -325,18 +2218,860 @@
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <div class="loading-spinner"><div class="spinner"></div></div>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
             <h3>Processing</h3>
             <p id="loadingText">Analyzing content...</p>
-            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Audio Elements -->
     <audio id="alertSound" preload="auto">
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAL4HF36tlGANAdKG+vI1oGAu/xM7aq2EYC7/EztqrYRgFB3h/rLWPh1sYBn+7ycm3j4sADwfV4+W/d1MAAPgmGgAAEBAAABgQAAAcEAAAIBAAACgQAAAwEAAAQhAAA" type="audio/wav">
     </audio>
 
-    <script src="script.js"></script>
+    <script>
+        // ========================================
+        // Authentication
+        // ========================================
+        const DEMO_USER = {
+            username: 'admin',
+            password: 'admin123',
+            name: 'Admin User'
+        };
+
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            const loginPage = document.getElementById('loginPage');
+            const mainApp = document.getElementById('mainApp');
+            
+            if (isLoggedIn) {
+                loginPage.style.display = 'none';
+                mainApp.style.display = 'block';
+                const userName = sessionStorage.getItem('userName') || DEMO_USER.name;
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+                initializeApp();
+            } else {
+                loginPage.style.display = 'flex';
+                mainApp.style.display = 'none';
+            }
+        }
+
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === DEMO_USER.username && password === DEMO_USER.password) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userName', DEMO_USER.name);
+                checkAuth();
+                showNotification('Login successful! Welcome back.', 'success');
+            } else {
+                showNotification('Invalid username or password. Use admin / admin123', 'error');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('userName');
+            checkAuth();
+            showNotification('Logged out successfully', 'success');
+        }
+
+        // ========================================
+        // Configuration & State
+        // ========================================
+        const CONFIG = {
+            API_BASE: 'https://accident-detection-system07-3.onrender.com', 
+            FRAME_INTERVAL: 500, 
+            ALERT_SOUND_ENABLED: true
+        };
+
+        const state = {
+            currentSection: 'home',
+            cameraStream: null,
+            websocket: null,
+            isDetecting: false,
+            frameCount: 0,
+            lastFrameTime: 0,
+            currentUser: null
+        };
+
+        // Sample camera locations for demo
+        const cameraLocations = {
+            'CAM-1001': { location: 'Intersection A - Main St & 1st Ave', status: 'active' },
+            'CAM-1002': { location: 'Highway 101 - Mile Marker 42', status: 'active' },
+            'CAM-1003': { location: 'Downtown - Market Square', status: 'active' },
+            'CAM-1004': { location: 'Tunnel Entrance - North Portal', status: 'maintenance' },
+            'CAM-1005': { location: 'Bridge Crossing - River Rd', status: 'active' }
+        };
+
+        // ========================================
+        // DOM Elements
+        // ========================================
+        const elements = {
+            navbar: document.getElementById('navbar'),
+            mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+            mobileMenu: document.getElementById('mobileMenu'),
+            sections: document.querySelectorAll('.section'),
+            navLinks: document.querySelectorAll('.nav-link'),
+            mobileNavLinks: document.querySelectorAll('.mobile-nav-link'),
+            imageInput: document.getElementById('imageInput'),
+            videoInput: document.getElementById('videoInput'),
+            imageDropZone: document.getElementById('imageDropZone'),
+            videoDropZone: document.getElementById('videoDropZone'),
+            imagePreview: document.getElementById('imagePreview'),
+            videoPreview: document.getElementById('videoPreview'),
+            previewImage: document.getElementById('previewImage'),
+            previewVideo: document.getElementById('previewVideo'),
+            imagePlaceholder: document.getElementById('imagePlaceholder'),
+            videoPlaceholder: document.getElementById('videoPlaceholder'),
+            resultsPanel: document.getElementById('resultsPanel'),
+            resultsContent: document.getElementById('resultsContent'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            loadingText: document.getElementById('loadingText'),
+            progressFill: document.getElementById('progressFill'),
+            alertModal: document.getElementById('alertModal'),
+            alertSound: document.getElementById('alertSound'),
+            webcamVideo: document.getElementById('webcamVideo'),
+            cameraOverlay: document.getElementById('cameraOverlay'),
+            detectionOverlay: document.getElementById('detectionOverlay'),
+            detectionLabel: document.getElementById('detectionLabel'),
+            cameraStatus: document.getElementById('cameraStatus'),
+            liveStatus: document.getElementById('liveStatus'),
+            liveConfidence: document.getElementById('liveConfidence'),
+            liveFPS: document.getElementById('liveFPS'),
+            startCameraBtn: document.getElementById('startCameraBtn'),
+            stopCameraBtn: document.getElementById('stopCameraBtn'),
+            historyTableBody: document.getElementById('historyTableBody'),
+            historyEmpty: document.getElementById('historyEmpty'),
+            totalDetections: document.getElementById('totalDetections'),
+            accidentsDetected: document.getElementById('accidentsDetected'),
+            safeDetections: document.getElementById('safeDetections'),
+            avgConfidence: document.getElementById('avgConfidence'),
+            historySearch: document.getElementById('historySearch'),
+            resultFilter: document.getElementById('resultFilter'),
+            statusFilter: document.getElementById('statusFilter')
+        };
+
+        let detectionHistory = [];
+
+        // ========================================
+        // Initialize Application
+        // ========================================
+        function initializeApp() {
+            initNavigation();
+            initFileUploads();
+            loadStats();
+            loadHistory();
+            
+            // Add filter listeners
+            if (elements.historySearch) {
+                elements.historySearch.addEventListener('input', () => filterAndRenderHistory());
+            }
+            if (elements.resultFilter) {
+                elements.resultFilter.addEventListener('change', () => filterAndRenderHistory());
+            }
+            if (elements.statusFilter) {
+                elements.statusFilter.addEventListener('change', () => filterAndRenderHistory());
+            }
+        }
+
+        // ========================================
+        // Navigation
+        // ========================================
+        function initNavigation() {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    elements.navbar.classList.add('scrolled');
+                } else {
+                    elements.navbar.classList.remove('scrolled');
+                }
+            });
+
+            elements.navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    navigateTo(section);
+                });
+            });
+
+            elements.mobileNavLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    navigateTo(section);
+                    elements.mobileMenu.classList.remove('show');
+                });
+            });
+
+            elements.mobileMenuBtn.addEventListener('click', () => {
+                elements.mobileMenu.classList.toggle('show');
+            });
+        }
+
+        function navigateTo(section) {
+            state.currentSection = section;
+            
+            elements.sections.forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            
+            elements.navLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === section);
+            });
+            
+            elements.mobileNavLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === section);
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if (section === 'history') {
+                loadHistory();
+            } else if (section === 'upload') {
+                loadStats();
+            }
+        }
+
+        // ========================================
+        // File Uploads
+        // ========================================
+        function initFileUploads() {
+            setupDropZone(elements.imageDropZone, elements.imageInput, handleImageSelect);
+            elements.imageDropZone.addEventListener('click', () => elements.imageInput.click());
+            elements.imageInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleImageSelect(e.target.files[0]);
+            });
+
+            setupDropZone(elements.videoDropZone, elements.videoInput, handleVideoSelect);
+            elements.videoDropZone.addEventListener('click', () => elements.videoInput.click());
+            elements.videoInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleVideoSelect(e.target.files[0]);
+            });
+        }
+
+        function setupDropZone(zone, input, handler) {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handler(file);
+            });
+        }
+
+        function handleImageSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('Please select an image file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                elements.previewImage.src = e.target.result;
+                elements.imagePreview.style.display = 'block';
+                elements.imagePlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleVideoSelect(file) {
+            if (!file.type.startsWith('video/')) {
+                showNotification('Please select a video file', 'error');
+                return;
+            }
+            
+            const url = URL.createObjectURL(file);
+            elements.previewVideo.src = url;
+            elements.videoPreview.style.display = 'block';
+            elements.videoPlaceholder.style.display = 'none';
+        }
+
+        function clearImagePreview() {
+            elements.previewImage.src = '';
+            elements.imagePreview.style.display = 'none';
+            elements.imagePlaceholder.style.display = 'block';
+            elements.imageInput.value = '';
+        }
+
+        function clearVideoPreview() {
+            elements.previewVideo.src = '';
+            elements.videoPreview.style.display = 'none';
+            elements.videoPlaceholder.style.display = 'block';
+            elements.videoInput.value = '';
+        }
+
+        // ========================================
+        // Image Analysis
+        // ========================================
+        async function analyzeImage() {
+            const file = elements.imageInput.files[0];
+            if (!file) {
+                showNotification('Please select an image first', 'error');
+                return;
+            }
+            
+            showLoading('Analyzing image...');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${CONFIG.API_BASE}/predict-image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add camera info to detection
+                    data.camera_id = generateCameraId();
+                    data.location = getCameraLocation(data.camera_id);
+                    data.status = 'active';
+                    addToHistory(data);
+                    displayResults(data, 'image');
+                    
+                    if (data.result === 'Accident') {
+                        showAlertModal(data);
+                    }
+                } else {
+                    throw new Error(data.detail || 'Analysis failed');
+                }
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+                loadStats();
+            }
+        }
+
+        // ========================================
+        // Video Analysis
+        // ========================================
+        async function analyzeVideo() {
+            const file = elements.videoInput.files[0];
+            if (!file) {
+                showNotification('Please select a video first', 'error');
+                return;
+            }
+            
+            showLoading('Processing video frame-by-frame...', true);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    updateProgress(progress);
+                }, 500);
+                
+                const response = await fetch(`${CONFIG.API_BASE}/predict-video`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                updateProgress(100);
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.camera_id = generateCameraId();
+                    data.location = getCameraLocation(data.camera_id);
+                    data.status = 'active';
+                    addToHistory(data);
+                    displayResults(data, 'video');
+                    
+                    if (data.result === 'Accident') {
+                        showAlertModal(data);
+                    }
+                } else {
+                    throw new Error(data.detail || 'Video analysis failed');
+                }
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+                loadStats();
+            }
+        }
+
+        // ========================================
+        // Helper Functions for Camera Info
+        // ========================================
+        function generateCameraId() {
+            const cameras = Object.keys(cameraLocations);
+            return cameras[Math.floor(Math.random() * cameras.length)];
+        }
+
+        function getCameraLocation(cameraId) {
+            return cameraLocations[cameraId]?.location || 'Unknown Location';
+        }
+
+        function getCameraStatus(cameraId) {
+            return cameraLocations[cameraId]?.status || 'inactive';
+        }
+
+        // ========================================
+        // History Management
+        // ========================================
+        function addToHistory(detection) {
+            const historyItem = {
+                id: detection.id || Date.now(),
+                timestamp: new Date().toISOString(),
+                camera_id: detection.camera_id,
+                location: detection.location,
+                result: detection.result,
+                confidence: detection.confidence,
+                severity: detection.severity || (detection.result === 'Accident' ? 'High' : 'None'),
+                status: detection.status || getCameraStatus(detection.camera_id),
+                response_time: detection.response_time,
+                input_type: detection.input_type || 'image'
+            };
+            
+            detectionHistory.unshift(historyItem);
+            saveHistoryToStorage();
+            filterAndRenderHistory();
+        }
+
+        function saveHistoryToStorage() {
+            localStorage.setItem('detectionHistory', JSON.stringify(detectionHistory));
+        }
+
+        function loadHistoryFromStorage() {
+            const stored = localStorage.getItem('detectionHistory');
+            if (stored) {
+                detectionHistory = JSON.parse(stored);
+            }
+        }
+
+        function filterAndRenderHistory() {
+            const searchTerm = elements.historySearch?.value.toLowerCase() || '';
+            const resultFilter = elements.resultFilter?.value || 'all';
+            const statusFilter = elements.statusFilter?.value || 'all';
+            
+            let filtered = [...detectionHistory];
+            
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    item.camera_id?.toLowerCase().includes(searchTerm) ||
+                    item.location?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (resultFilter !== 'all') {
+                filtered = filtered.filter(item => item.result === resultFilter);
+            }
+            
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(item => item.status === statusFilter);
+            }
+            
+            renderHistory(filtered);
+        }
+
+        function renderHistory(history) {
+            if (!history || history.length === 0) {
+                elements.historyTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #8892B0; padding: 40px;">
+                            No detection records found
+                        </td>
+                    </tr>
+                `;
+                elements.historyEmpty.style.display = 'block';
+                return;
+            }
+            
+            elements.historyEmpty.style.display = 'none';
+            
+            const html = history.map(item => {
+                const isAccident = item.result === 'Accident';
+                const timestamp = new Date(item.timestamp).toLocaleString();
+                
+                return `
+                    <tr>
+                        <td>#${item.id}</td>
+                        <td>${timestamp}</td>
+                        <td><code>${item.camera_id || 'N/A'}</code></td>
+                        <td>${item.location || 'N/A'}</td>
+                        <td>
+                            <span class="result-tag ${isAccident ? 'accident' : 'safe'}">
+                                ${item.result}
+                            </span>
+                        </td>
+                        <td>${item.confidence?.toFixed(1) || '--'}%</td>
+                        <td>
+                            <span class="severity-tag ${(item.severity || 'none').toLowerCase()}">
+                                ${item.severity || 'N/A'}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-tag ${item.status || 'inactive'}">
+                                ${item.status || 'Inactive'}
+                            </span>
+                        </td>
+                        <td>${item.response_time?.toFixed(2) || '--'}s</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            elements.historyTableBody.innerHTML = html;
+        }
+
+        async function loadHistory() {
+            loadHistoryFromStorage();
+            filterAndRenderHistory();
+            await loadStats();
+        }
+
+        async function refreshHistory() {
+            loadHistoryFromStorage();
+            filterAndRenderHistory();
+            showNotification('History refreshed', 'success');
+        }
+
+        async function clearAllHistory() {
+            if (!confirm('Are you sure you want to clear all detection history?')) return;
+            
+            detectionHistory = [];
+            saveHistoryToStorage();
+            filterAndRenderHistory();
+            await loadStats();
+            showNotification('History cleared', 'success');
+        }
+
+        // ========================================
+        // Results Display
+        // ========================================
+        function displayResults(data, type) {
+            const isAccident = data.result === 'Accident';
+            
+            let html = `
+                <div class="result-main">
+                    <div class="result-badge ${isAccident ? 'accident' : 'safe'}">
+                        ${isAccident ? 'Accident Detected' : 'No Accident'}
+                    </div>
+                    <div class="confidence-display">
+                        <span class="confidence-value">${data.confidence.toFixed(1)}%</span>
+                        <span class="confidence-label">Confidence Score</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${data.confidence}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="result-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Camera ID</span>
+                        <span class="detail-value">${data.camera_id || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Location</span>
+                        <span class="detail-value">${data.location || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Response Time</span>
+                        <span class="detail-value">${data.response_time.toFixed(2)}s</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Severity</span>
+                        <span class="detail-value severity-${(data.severity || 'none').toLowerCase()}">${data.severity || 'N/A'}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (type === 'video' && data.accident_frames && data.accident_frames.length > 0) {
+                html += `
+                    <div class="accident-frames-list">
+                        <h4>Accident Detected at Timestamps:</h4>
+                        <div class="frames-grid">
+                            ${data.accident_frames.slice(0, 12).map(f => `
+                                <div class="frame-item">
+                                    <span class="frame-time">${f.timestamp}s</span>
+                                    <span class="frame-confidence">${f.confidence.toFixed(1)}%</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            elements.resultsContent.innerHTML = html;
+            elements.resultsPanel.style.display = 'block';
+            elements.resultsPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeResults() {
+            elements.resultsPanel.style.display = 'none';
+        }
+
+        // ========================================
+        // Live Camera Detection
+        // ========================================
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720, facingMode: 'environment' }
+                });
+                
+                state.cameraStream = stream;
+                elements.webcamVideo.srcObject = stream;
+                
+                elements.cameraOverlay.style.display = 'none';
+                elements.startCameraBtn.style.display = 'none';
+                elements.stopCameraBtn.style.display = 'inline-flex';
+                
+                updateCameraStatus(true, 'Camera Active');
+                elements.liveStatus.textContent = 'Detecting';
+                
+                startWebSocket();
+                
+            } catch (error) {
+                showNotification(`Camera error: ${error.message}`, 'error');
+                updateCameraStatus(false, 'Camera Error');
+            }
+        }
+
+        function stopCamera() {
+            if (state.cameraStream) {
+                state.cameraStream.getTracks().forEach(track => track.stop());
+                state.cameraStream = null;
+            }
+            
+            if (state.websocket) {
+                state.websocket.close();
+                state.websocket = null;
+            }
+            
+            elements.webcamVideo.srcObject = null;
+            elements.cameraOverlay.style.display = 'flex';
+            elements.detectionOverlay.style.display = 'none';
+            elements.startCameraBtn.style.display = 'inline-flex';
+            elements.stopCameraBtn.style.display = 'none';
+            
+            updateCameraStatus(false, 'Camera Off');
+            elements.liveStatus.textContent = 'Inactive';
+            elements.liveConfidence.textContent = '--';
+            elements.liveFPS.textContent = '--';
+        }
+
+        function startWebSocket() {
+            const wsProtocol = CONFIG.API_BASE.startsWith('https') ? 'wss' : 'ws';
+            const wsUrl = `${wsProtocol}://${CONFIG.API_BASE.replace(/^https?:\/\//, '')}/ws/live-detection`;
+            
+            state.websocket = new WebSocket(wsUrl);
+            
+            state.websocket.onopen = () => {
+                console.log('WebSocket connected');
+                startFrameCapture();
+            };
+            
+            state.websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleDetectionResult(data);
+            };
+            
+            state.websocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            state.websocket.onclose = () => {
+                console.log('WebSocket disconnected');
+            };
+        }
+
+        function startFrameCapture() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            state.isDetecting = true;
+            state.frameCount = 0;
+            state.lastFrameTime = performance.now();
+            
+            function captureFrame() {
+                if (!state.isDetecting || !state.websocket || state.websocket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+                
+                const video = elements.webcamVideo;
+                if (video.videoWidth === 0) {
+                    setTimeout(captureFrame, CONFIG.FRAME_INTERVAL);
+                    return;
+                }
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                ctx.drawImage(video, 0, 0);
+                canvas.toBlob((blob) => {
+                    if (blob && state.websocket && state.websocket.readyState === WebSocket.OPEN) {
+                        blob.arrayBuffer().then(buffer => {
+                            state.websocket.send(buffer);
+                        });
+                    }
+                }, 'image/jpeg', 0.8);
+                
+                const now = performance.now();
+                const fps = Math.round(1000 / (now - state.lastFrameTime));
+                state.lastFrameTime = now;
+                elements.liveFPS.textContent = fps;
+                
+                state.frameCount++;
+                setTimeout(captureFrame, CONFIG.FRAME_INTERVAL);
+            }
+            
+            captureFrame();
+        }
+
+        function handleDetectionResult(data) {
+            const isAccident = data.result === 'Accident';
+            
+            elements.liveConfidence.textContent = `${data.confidence.toFixed(1)}%`;
+            
+            elements.detectionOverlay.style.display = 'block';
+            elements.detectionLabel.className = `detection-label ${isAccident ? 'accident' : ''}`;
+            elements.detectionLabel.innerHTML = `
+                <span class="result-text">${data.result}</span>
+                <span class="confidence-text">${data.confidence.toFixed(1)}%</span>
+            `;
+            
+            if (isAccident && CONFIG.ALERT_SOUND_ENABLED) {
+                const cameraId = generateCameraId();
+                data.camera_id = cameraId;
+                data.location = getCameraLocation(cameraId);
+                showAlertModal(data);
+                playAlertSound();
+                addToHistory(data);
+            }
+        }
+
+        function updateCameraStatus(active, text) {
+            const statusEl = elements.cameraStatus;
+            if (active) {
+                statusEl.classList.add('active');
+            } else {
+                statusEl.classList.remove('active');
+            }
+            statusEl.querySelector('.text').textContent = text;
+        }
+
+        // ========================================
+        // Statistics
+        // ========================================
+        async function loadStats() {
+            const total = detectionHistory.length;
+            const accidents = detectionHistory.filter(h => h.result === 'Accident').length;
+            const safe = total - accidents;
+            const avgConf = detectionHistory.reduce((sum, h) => sum + (h.confidence || 0), 0) / (total || 1);
+            
+            elements.totalDetections.textContent = total;
+            elements.accidentsDetected.textContent = accidents;
+            elements.safeDetections.textContent = safe;
+            elements.avgConfidence.textContent = `${avgConf.toFixed(1)}%`;
+        }
+
+        // ========================================
+        // Alerts & Notifications
+        // ========================================
+        function showAlertModal(data) {
+            document.getElementById('alertConfidence').textContent = `${data.confidence?.toFixed(1) || '--'}%`;
+            document.getElementById('alertSeverity').textContent = data.severity || 'Detected';
+            document.getElementById('alertCameraId').textContent = data.camera_id || 'CAM-1001';
+            document.getElementById('alertLocation').textContent = data.location || 'Unknown Location';
+            document.getElementById('alertTime').textContent = new Date().toLocaleTimeString();
+            
+            elements.alertModal.classList.add('show');
+        }
+
+        function closeAlertModal() {
+            elements.alertModal.classList.remove('show');
+        }
+
+        function playAlertSound() {
+            try {
+                elements.alertSound.currentTime = 0;
+                elements.alertSound.play().catch(() => {});
+            } catch (e) {
+                console.log('Could not play alert sound');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            Object.assign(notification.style, {
+                position: 'fixed',
+                bottom: '24px',
+                right: '24px',
+                padding: '16px 24px',
+                background: type === 'error' ? 'rgba(255, 71, 87, 0.95)' : type === 'success' ? 'rgba(0, 210, 106, 0.95)' : 'rgba(58, 175, 169, 0.95)',
+                color: '#fff',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+                zIndex: '9999',
+                animation: 'slideInRight 0.3s ease'
+            });
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        // ========================================
+        // Loading States
+        // ========================================
+        function showLoading(text = 'Processing...', showProgress = false) {
+            elements.loadingText.textContent = text;
+            elements.progressFill.style.width = '0%';
+            elements.loadingOverlay.classList.add('show');
+        }
+
+        function hideLoading() {
+            elements.loadingOverlay.classList.remove('show');
+        }
+
+        function updateProgress(percent) {
+            elements.progressFill.style.width = `${Math.min(percent, 100)}%`;
+        }
+
+        // ========================================
+        // Event Listeners
+        // ========================================
+        document.getElementById('loginForm').addEventListener('submit', login);
+        
+        // Initialize auth check
+        checkAuth();
+    </script>
 </body>
 </html>
