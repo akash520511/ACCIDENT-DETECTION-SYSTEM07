@@ -3,7 +3,7 @@
 // ========================================
 const CONFIG = {
     API_BASE: 'https://accident-detection-system07-3.onrender.com', // Your Live Backend
-    FRAME_INTERVAL: 500, // ms between frame captures for live cam
+    FRAME_INTERVAL: 500,
     ALERT_SOUND_ENABLED: true
 };
 
@@ -15,6 +15,16 @@ const state = {
     frameCount: 0,
     lastFrameTime: 0
 };
+
+// ========================================
+// Authentication Protection
+// ========================================
+(function() {
+    // If no token found, redirect to login page
+    if (!localStorage.getItem('token') && !window.location.pathname.endsWith('login.html')) {
+        window.location.href = 'login.html';
+    }
+})();
 
 // ========================================
 // DOM Elements
@@ -514,9 +524,7 @@ function updateCameraStatus(active, text) {
 }
 
 // ========================================
-// History
-// ========================================
-async function loadHistory() {
+// History (Premium Version with Location/Status)
     try {
         const response = await fetch(`${CONFIG.API_BASE}/history?limit=100`);
         const data = await response.json();
@@ -537,22 +545,31 @@ async function loadHistory() {
 function renderHistory(history) {
     const html = history.map(item => {
         const isAccident = item.result === 'Accident';
-        const timestamp = new Date(item.timestamp).toLocaleString();
+        // Format timestamp for India
+        const timestamp = new Date(item.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
         
         return `
             <tr>
                 <td>#${item.id}</td>
                 <td>${timestamp}</td>
                 <td>
+                    <strong>${item.camera_id || 'CAM-001'}</strong><br>
+                    <small style="opacity:0.7">${item.location || 'India'}</small>
+                </td>
+                <td>
                     <span class="result-tag ${isAccident ? 'accident' : 'safe'}">
                         ${item.result}
                     </span>
                 </td>
                 <td>${item.confidence?.toFixed(1) || '--'}%</td>
-                <td>${item.input_type || '--'}</td>
                 <td>
                     <span class="severity-tag ${(item.severity || 'none').toLowerCase()}">
                         ${item.severity || 'N/A'}
+                    </span>
+                </td>
+                <td>
+                     <span class="status-badge ${item.status === 'Alert Sent' ? 'alert-sent' : 'detected'}">
+                        ${item.status || 'Detected'}
                     </span>
                 </td>
                 <td>${item.response_time?.toFixed(2) || '--'}s</td>
@@ -679,6 +696,14 @@ function updateProgress(percent) {
 }
 
 // ========================================
+// Logout Function
+// ========================================
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'login.html';
+}
+
+// ========================================
 // CSS Animations (injected)
 // ========================================
 const style = document.createElement('style');
@@ -691,5 +716,16 @@ style.textContent = `
         from { opacity: 1; transform: translateX(0); }
         to { opacity: 0; transform: translateX(100px); }
     }
+    
+    /* Premium Status Badge for History */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-badge.alert-sent { background: #FF4757; color: white; }
+    .status-badge.detected { background: #2ed573; color: white; }
 `;
 document.head.appendChild(style);
