@@ -2,7 +2,7 @@
 // Configuration & State
 // ========================================
 const CONFIG = {
-    API_BASE: 'https://accident-detection-system07-3.onrender.com', // Your Live Backend
+    API_BASE: 'https://accident-detection-system07-3.onrender.com', // YOUR LIVE BACKEND URL
     FRAME_INTERVAL: 500,
     ALERT_SOUND_ENABLED: true
 };
@@ -85,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Navigation
 // ========================================
 function initNavigation() {
-    // Scroll handling
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) {
             elements.navbar.classList.add('scrolled');
@@ -94,7 +93,6 @@ function initNavigation() {
         }
     });
 
-    // Nav links
     elements.navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -103,7 +101,6 @@ function initNavigation() {
         });
     });
 
-    // Mobile nav links
     elements.mobileNavLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -113,7 +110,6 @@ function initNavigation() {
         });
     });
 
-    // Mobile menu toggle
     elements.mobileMenuBtn.addEventListener('click', () => {
         elements.mobileMenu.classList.toggle('show');
     });
@@ -122,11 +118,9 @@ function initNavigation() {
 function navigateTo(section) {
     state.currentSection = section;
     
-    // Update sections
     elements.sections.forEach(s => s.classList.remove('active'));
     document.getElementById(section).classList.add('active');
     
-    // Update nav links
     elements.navLinks.forEach(link => {
         link.classList.toggle('active', link.dataset.section === section);
     });
@@ -135,10 +129,8 @@ function navigateTo(section) {
         link.classList.toggle('active', link.dataset.section === section);
     });
     
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // Load section-specific data
     if (section === 'history') {
         loadHistory();
     } else if (section === 'upload') {
@@ -150,14 +142,12 @@ function navigateTo(section) {
 // File Uploads
 // ========================================
 function initFileUploads() {
-    // Image upload
     setupDropZone(elements.imageDropZone, elements.imageInput, handleImageSelect);
     elements.imageDropZone.addEventListener('click', () => elements.imageInput.click());
     elements.imageInput.addEventListener('change', (e) => {
         if (e.target.files[0]) handleImageSelect(e.target.files[0]);
     });
 
-    // Video upload
     setupDropZone(elements.videoDropZone, elements.videoInput, handleVideoSelect);
     elements.videoDropZone.addEventListener('click', () => elements.videoInput.click());
     elements.videoInput.addEventListener('change', (e) => {
@@ -280,7 +270,6 @@ async function analyzeVideo() {
     formData.append('file', file);
     
     try {
-        // Simulate progress for better UX
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += Math.random() * 15;
@@ -356,7 +345,6 @@ function displayResults(data, type) {
         </div>
     `;
     
-    // Show accident frame timestamps for video
     if (type === 'video' && data.accident_frames && data.accident_frames.length > 0) {
         html += `
             <div class="accident-frames-list">
@@ -401,7 +389,6 @@ async function startCamera() {
         updateCameraStatus(true, 'Camera Active');
         elements.liveStatus.textContent = 'Detecting';
         
-        // Start WebSocket connection
         startWebSocket();
         
     } catch (error) {
@@ -484,7 +471,6 @@ function startFrameCapture() {
             }
         }, 'image/jpeg', 0.8);
         
-        // Update FPS
         const now = performance.now();
         const fps = Math.round(1000 / (now - state.lastFrameTime));
         state.lastFrameTime = now;
@@ -502,7 +488,6 @@ function handleDetectionResult(data) {
     
     elements.liveConfidence.textContent = `${data.confidence.toFixed(1)}%`;
     
-    // Update detection overlay
     elements.detectionOverlay.style.display = 'block';
     elements.detectionLabel.className = `detection-label ${isAccident ? 'accident' : ''}`;
     elements.detectionLabel.innerHTML = `
@@ -510,7 +495,6 @@ function handleDetectionResult(data) {
         <span class="confidence-text">${data.confidence.toFixed(1)}%</span>
     `;
     
-    // Trigger alert for accident
     if (isAccident && CONFIG.ALERT_SOUND_ENABLED) {
         showAlertModal(data);
         playAlertSound();
@@ -524,7 +508,7 @@ function updateCameraStatus(active, text) {
 }
 
 // ========================================
-// History (Premium Version with Location/Status)
+// History (Premium Version)
     try {
         const response = await fetch(`${CONFIG.API_BASE}/history?limit=100`);
         const data = await response.json();
@@ -545,7 +529,6 @@ function updateCameraStatus(active, text) {
 function renderHistory(history) {
     const html = history.map(item => {
         const isAccident = item.result === 'Accident';
-        // Format timestamp for India
         const timestamp = new Date(item.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
         
         return `
@@ -643,7 +626,6 @@ function playAlertSound() {
 }
 
 function showNotification(message, type = 'info') {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -651,7 +633,6 @@ function showNotification(message, type = 'info') {
         <span>${message}</span>
     `;
     
-    // Style the notification
     Object.assign(notification.style, {
         position: 'fixed',
         bottom: '24px',
