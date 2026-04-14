@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 # Correct path for deployment (weights folder inside backend)
 # Assumes you put your 'best.pt' file in 'backend/weights/'
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "weights", "yolovo8s.pt")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "weights", "yolov8s.pt")
 
 _model = None
 
