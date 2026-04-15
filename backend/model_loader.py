@@ -2,27 +2,16 @@ import os
 import cv2
 import numpy as np
 from typing import Dict, Any
-import torch
-
-# FIX: Allow loading older model weights
-# This is safe because we trust the YOLO source
-import torch.serialization
-try:
-    from ultralytics.nn.tasks import DetectionModel
-    torch.serialization.add_safe_globals([DetectionModel])
-except ImportError:
-    pass
-
 from ultralytics import YOLO
 
 # Path configuration
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "weights")
-CUSTOM_MODEL_PATH = os.path.join(MODEL_DIR, "yolov8s.pt") 
+CUSTOM_MODEL_PATH = os.path.join(MODEL_DIR, "yolov8s.pt") # Matches your logs
 
 _model = None
 
 def load_model():
-    """Load model with PyTorch 2.6 compatibility fix"""
+    """Load model compatible with PyTorch 2.2.0"""
     global _model
     
     if _model is not None:
@@ -34,19 +23,18 @@ def load_model():
     if os.path.exists(CUSTOM_MODEL_PATH):
         try:
             print(f"Loading custom model from {CUSTOM_MODEL_PATH}...")
-            # FIX: Pass weights_only=False to bypass PyTorch security
-            # We trust the source of this file
+            # PyTorch 2.2.0 loads weights fine by default
             _model = YOLO(CUSTOM_MODEL_PATH)
             _model.to('cpu')
             print("✅ Custom model loaded successfully.")
             return _model
         except Exception as e:
             print(f"❌ Custom model error: {e}")
+            print("⚠️ Falling back to standard model...")
 
-    # 2. Fallback to standard model
+    # 2. Fallback to standard model (Auto-downloads)
     try:
         print("Loading standard model (yolov8n.pt)...")
-        # Download from official source (trusted)
         _model = YOLO("yolov8n.pt") 
         _model.to('cpu')
         print("✅ Standard model loaded.")
@@ -74,7 +62,6 @@ def predict_single_frame(model, image: np.ndarray) -> Dict[str, Any]:
                     cls_id = int(box.cls[0])
                     class_name = model.names.get(cls_id, "unknown")
                     
-                    # Check for vehicles/accident classes
                     if class_name in ["car", "truck", "bus", "motorcycle", "accident"]:
                         if conf > max_confidence:
                             max_confidence = conf
