@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 # Path configuration
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "weights")
-CUSTOM_MODEL_PATH = os.path.join(MODEL_DIR, "best.pt")
+CUSTOM_MODEL_PATH = os.path.join(MODEL_DIR, "yolov8s.pt")
 
 _model = None
 
