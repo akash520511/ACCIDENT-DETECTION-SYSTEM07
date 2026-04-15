@@ -11,10 +11,13 @@ import uvicorn
 import requests
 import json
 
-# Import custom modules
-from model_loader import load_model, predict_single_frame
-import database
-import sms_service
+# ==========================================
+# CRITICAL FIX: RELATIVE IMPORTS (Dots . added)
+# ==========================================
+from .model_loader import load_model, predict_single_frame
+from . import database
+from . import sms_service
+# ==========================================
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -43,14 +46,14 @@ app.mount("/saved_frames", StaticFiles(directory=SAVED_FRAMES_DIR), name="saved_
 model = None
 detection_active = False
 
-# SMS Configuration (from your screenshot)
+# SMS Configuration
 TWILIO_CONFIG = {
     "account_sid": "ACf60f450f29fabf5d4dd01680f2052f48",
     "auth_token": "23e740f40d9a83da528c411d10133e4f",
     "phone_number": "+14787395985"
 }
 
-# Emergency contact numbers (store in database in production)
+# Emergency contact numbers
 EMERGENCY_CONTACTS = [
     {"name": "Police", "number": "+911", "type": "police"},
     {"name": "Ambulance", "number": "+912", "type": "medical"},
@@ -129,7 +132,7 @@ async def predict_image(
             
             # Send SMS alerts
             if send_alert:
-                location = get_location_from_ip()  # You can implement this
+                location = get_location_from_ip()
                 sms_result = await send_accident_alert(
                     confidence=prediction["confidence"],
                     location=location,
@@ -406,7 +409,7 @@ async def send_accident_alert(confidence, location, image_path=None, phone_numbe
     return {"success": success, "details": results}
 
 def get_location_from_ip():
-    """Get approximate location from IP (you can enhance this)"""
+    """Get approximate location from IP"""
     try:
         response = requests.get('http://ip-api.com/json/', timeout=5)
         data = response.json()
@@ -416,5 +419,6 @@ def get_location_from_ip():
         pass
     return "Location unavailable"
 
+# This block allows running locally, but Render uses the start command
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
