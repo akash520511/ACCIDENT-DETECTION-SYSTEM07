@@ -1,25 +1,27 @@
-setuptools==69.0.0
-wheel==0.42.0
-
-fastapi==0.104.1
-uvicorn==0.24.0
-python-multipart==0.0.6
-
-# Use headless OpenCV for server environments (avoids GUI errors)
-opencv-python-headless==4.8.1.78
-
-numpy==1.24.3
-pillow==10.1.0
-scikit-learn==1.3.2
-pandas==2.1.3
-joblib==1.3.2
+# Web Framework
+fastapi==0.111.0
+pydantic==2.7.1
+starlette==0.37.2
+uvicorn[standard]==0.24.0
+python-multipart==0.0.9
 aiofiles==23.2.1
 
-# REQUIRED: Your model uses YOLO
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Data & AI
+numpy==1.24.3
+pandas==2.1.3
+opencv-python-headless==4.8.1.78
+pillow==10.1.0
+
+# Deep Learning - Pinned for compatibility
+torch==2.2.0
+torchvision==0.17.0
 ultralytics==8.2.0
 
-# Twilio for SMS
-twilio==9.0.0
-
-# For IP location
-requests==2.31.0
+# Alerts
+twilio
+sendgrid
+requests
